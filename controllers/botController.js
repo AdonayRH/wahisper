@@ -33,12 +33,12 @@ const setupBot = (bot) => {
       await telegramService.saveUserMessage(ctx);
       
       const helpMessage = `
-Comandos disponibles:
-/start - Iniciar el bot
-/help - Mostrar esta ayuda
-/reset - Reiniciar la conversación
+        Comandos disponibles:
+        /start - Iniciar el bot
+        /help - Mostrar esta ayuda
+        /reset - Reiniciar la conversación
 
-Puedes enviarme cualquier mensaje y te responderé usando IA.
+        Puedes enviarme cualquier mensaje y te responderé usando IA.
       `;
       
       await ctx.reply(helpMessage);

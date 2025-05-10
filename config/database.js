@@ -9,9 +9,11 @@ const connectDB = async () => {
     });
     
     logger.info(`MongoDB conectada: ${conn.connection.host}`);
-    return conn;
+    return mongoose; // Retorna la instancia de mongoose
   } catch (err) {
     logger.error(`Error al conectar a MongoDB: ${err.message}`);
     process.exit(1);
   }
 };
+
+module.exports = connectDB;

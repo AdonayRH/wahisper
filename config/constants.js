@@ -3,7 +3,7 @@ module.exports = {
     OPENAI_MODEL: 'gpt-4',
     
     // Mensajes predeterminados
-    DEFAULT_WELCOME_MESSAGE: '¡Hola! Soy un bot asistente. ¿En qué puedo ayudarte hoy?',
+    DEFAULT_WELCOME_MESSAGE: '¡Hola! Soy tu asistente de compras. ¿En qué puedo ayudarte hoy?',
     DEFAULT_ERROR_MESSAGE: 'Lo siento, ocurrió un error al procesar tu solicitud.',
     
     // Configuraciones del bot
