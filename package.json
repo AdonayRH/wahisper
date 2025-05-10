@@ -1,15 +1,26 @@
 {
-  "name": "whaisper",
+  "name": "whaisper2",
   "version": "1.0.0",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "express": "^5.1.0"
+    "axios": "^1.9.0",
+    "compute-cosine-similarity": "^1.1.0",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "fs-extra": "^11.3.0",
+    "mongoose": "^8.14.1",
+    "multer": "^1.4.5-lts.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "openai": "^4.97.0",
+    "xlsx": "^0.18.5"
   }
 }
