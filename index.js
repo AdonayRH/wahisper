@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const mongoose = require('mongoose');
-const { connectDB } = require('./config/database');
+const connectDB = require('./config/database');
 const botController = require('./controllers/botController');
 const logger = require('./utils/logger');
 
