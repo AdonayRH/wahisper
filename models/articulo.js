@@ -18,7 +18,7 @@ const articuloSchema = new mongoose.Schema({
     required: true,
     default: 0
   },
-  stock: {
+  unidades: {
     type: Number,
     default: 0,
     min: 0
@@ -28,14 +28,6 @@ const articuloSchema = new mongoose.Schema({
     select: false, // No incluir en consultas
     required: false
   },
-  categoria: {
-    type: String,
-    trim: true
-  },
-  disponible: {
-    type: Boolean,
-    default: true
-  }
 }, { 
   timestamps: true,
   strict: false

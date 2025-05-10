@@ -1,4 +1,4 @@
-// controllers/botController.js (archivo principal)
+// Este módulo gestiona el carrito de compras en memoria para un bot de Telegram.
 const bot = require("../services/telegramService");
 const carritoService = require("../services/carritoService");
 const { analyzeIntent } = require("../services/intentAnalysisService");

@@ -1,3 +1,4 @@
+// Este módulo gestiona el carrito de compras en memoria para un bot de Telegram.
 const fs = require('fs');
 const carritoService = require('../services/carritoService');
 const buttonService = require('../services/buttonGeneratorService');

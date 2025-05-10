@@ -59,15 +59,14 @@ function normalizeArticulo(item) {
   const codigoKey = getKey('codigoarticulo') || getKey('codigo') || getKey('id');
   const descripcionKey = getKey('descripcionarticulo') || getKey('descripcion') || getKey('nombre');
   const pvpKey = getKey('pvp') || getKey('precio') || getKey('valor');
-  const stockKey = getKey('unidades') || getKey('stock') || getKey('cantidad');
+  const unidadesKey = getKey('unidades') || getKey('stock') || getKey('cantidad');
   
   // Normalizar
   return {
     CodigoArticulo: String(item[codigoKey] || '').trim(),
     DescripcionArticulo: String(item[descripcionKey] || '').trim(),
     PVP: parseFloat(item[pvpKey]),
-    stock: parseInteger(item[stockKey]),
-    disponible: parseInteger(item[stockKey]) > 0
+    unidades: parseInteger(item[unidadesKey])
   };
 }
 

@@ -1,3 +1,4 @@
+// Este módulo gestiona las conversaciones y el estado del bot de Telegram.
 const stateService = require('../services/botStateService');
 const cartController = require('./cartController');
 const productController = require('./productController');
