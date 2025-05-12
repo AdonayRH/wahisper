@@ -54,7 +54,7 @@ async function handleProductSelection(bot, chatId, productIndex) {
     bot.sendMessage(
       chatId,
       `Has seleccionado "${product.DescripcionArticulo}" (${product.PVP}€).${stockInfo}\n\n¿Cuántas unidades deseas?`,
-      generateQuantityButtonsWithStock(productIndex, availability.stock)
+      // generateQuantityButtonsWithStock(productIndex, availability.stock)
     );
   } catch (error) {
     console.error("Error al manejar selección de producto:", error);
@@ -143,7 +143,7 @@ async function handleQuantitySelection(bot, chatId, productIndex, quantity) {
       return bot.sendMessage(
         chatId,
         `❌ Lo siento, solo hay ${availability.stock} unidades disponibles de "${product.DescripcionArticulo}".\n\nPor favor, selecciona una cantidad menor.`,
-        generateQuantityButtonsWithStock(productIndex, availability.stock)
+        // generateQuantityButtonsWithStock(productIndex, availability.stock)
       );
     }
     
@@ -217,7 +217,7 @@ async function handleProductSearch(bot, chatId, query) {
     bot.sendMessage(
       chatId, 
       "¿Cuál de estos productos te interesa?",
-      buttonService.generateProductButtons(context.lastMentionedArticles)
+      // buttonService.generateProductButtons(context.lastMentionedArticles)
     );
   } catch (error) {
     console.error("Error al buscar productos:", error);
