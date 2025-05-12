@@ -16,6 +16,7 @@ module.exports = {
     CONFIRMING_REMOVE_ITEM: 'confirming_remove_item',
     REMOVING_ITEM: 'removing_item',
     CONFIRMING_CHECKOUT: 'confirming_checkout',
-    CHECKOUT_COMPLETED: 'checkout_completed'
+    CHECKOUT_COMPLETED: 'checkout_completed',
+    VIEW_CART: 'view_cart',
   }
 };

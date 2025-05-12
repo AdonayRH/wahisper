@@ -14,11 +14,12 @@ async function handleCartCommand(bot, chatId) {
     const carrito = carritoService.getCart(chatId.toString());
     
     if (!carrito || carrito.items.length === 0) {
-      return bot.sendMessage(
-        chatId, 
-        "Tu carrito está vacío. ¿En qué puedo ayudarte hoy?", 
-        buttonGeneratorService.generateEmptyCartButtons()
-      );
+      return bot.sendMessage(chatId, "Tu carrito está vacío. ¿En qué puedo ayudarte hoy?");
+      // return bot.sendMessage(
+      //   chatId, 
+      //   "Tu carrito está vacío. ¿En qué puedo ayudarte hoy?", 
+      //   buttonGeneratorService.generateEmptyCartButtons()
+      // );
     }
     
     let total = 0;
@@ -40,7 +41,7 @@ async function handleCartCommand(bot, chatId) {
     // Enviar mensaje con botones adecuados según número de items
     bot.sendMessage(chatId, mensaje, { 
       parse_mode: "Markdown",
-      ...buttonGeneratorService.generateCartButtons(carrito.items.length)
+      // ...buttonGeneratorService.generateCartButtons(carrito.items.length)
     });
   } catch (error) {
     console.error("Error al mostrar el carrito:", error);
