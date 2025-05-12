@@ -25,8 +25,29 @@ async function analyzeIntent(message, context = {}) {
     systemMessage += "CLEAR_CART (vaciar completamente el carrito), ";
     systemMessage += "OTHER (otro tipo de mensaje).";
 
+
+    //Instrucciones específicas para redirijir a FAREWELL (despedida)
+    systemMessage += "\n\nCuando el usuario indique que no desea nada más, clasifica como FAREWELL. Esto incluye:";
+    systemMessage += "\n- Responder 'no' cuando se le pregunta si necesita algo más";
+    systemMessage += "\n- Expresiones como 'no, gracias', 'nada más', 'eso es todo', 'ya está', 'listo', 'suficiente'";
+    systemMessage += "\n- Cualquier mensaje que indique que el usuario ha terminado o no desea continuar";
+    systemMessage += "\n- Si dice 'adiós', 'hasta luego', 'gracias por todo', etc.";
+    // Instrucciones específicas para ASKING_FOR_MORE state
+    systemMessage += "\n\nPrioridad alta: Si el usuario está en el estado ASKING_FOR_MORE y responde negativamente (no, nada más, etc.), SIEMPRE clasifica como FAREWELL con confianza alta.";
+    
     // Instrucciones específicas para remover elementos
     systemMessage += "\n\nCuando el usuario mencione que quiere eliminar, quitar, borrar o sacar algo del carrito, clasifica como REMOVE_FROM_CART. Si menciona eliminar todo, vaciar o limpiar el carrito completo, clasifica como CLEAR_CART.";
+
+    // Ejemplos más específicos para FAREWELL
+    systemMessage += "\n\nEjemplos para FAREWELL:";
+    systemMessage += "\n- 'No, gracias'";
+    systemMessage += "\n- 'No quiero nada más'";
+    systemMessage += "\n- 'Con eso es suficiente'";
+    systemMessage += "\n- 'Eso es todo'";
+    systemMessage += "\n- 'Ya está'";
+    systemMessage += "\n- 'Nada más'";
+    systemMessage += "\n- 'No por ahora'";
+    systemMessage += "\n- Simple respuesta 'No' cuando se ha preguntado si quiere algo más";
 
      // Ejemplos para eliminar del carrito
     systemMessage += "\n\nEjemplos para REMOVE_FROM_CART:";
@@ -64,6 +85,10 @@ async function analyzeIntent(message, context = {}) {
     // Añadir artículos mostrados
     if (context.currentState) {
       systemMessage += `\n\nEstado actual de la conversación: ${context.currentState}.`;
+      // Instrucciones específicas según el estado
+      if (context.currentState === 'ASKING_FOR_MORE') {
+        systemMessage += "\n\nATENCIÓN ESPECIAL: El usuario está en estado ASKING_FOR_MORE, lo que significa que se le ha preguntado si desea algo más. Si el usuario responde de forma negativa (no, nada más, ya no quiero nada, está bien así, etc.), SIEMPRE clasifica como FAREWELL, no como REJECTION.";
+      }
     }
     // Añadir estado de la conversación
     if (context.currentState === 'ASKING_QUANTITY') {
@@ -74,6 +99,7 @@ async function analyzeIntent(message, context = {}) {
     if (context.currentState === 'CONFIRMING_CART') {
       systemMessage += "\n\nSi el usuario hace cualquier referencia a ver, mostrar, consultar o preguntar por su carrito, cesta de compra o productos seleccionados, clasifica esto como VIEW_CART con alta confianza.";
     }
+
     // Construcción de la intencionalidad del usuario
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -128,7 +154,10 @@ async function analyzeIntent(message, context = {}) {
     return JSON.parse(functionCall.arguments);
   } catch (error) {
     console.error("Error al analizar la intención:", error);
-    // Devolver un valor por defecto en caso de error
+    // Si el usuario realiza una acción no válida o no se puede clasificar, devolver un objeto con la intención "OTHER"
+    // y una confianza de 0.5
+
+    
     return {
       intent: "OTHER",
       confidence: 0.5,

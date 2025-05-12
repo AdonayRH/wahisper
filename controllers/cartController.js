@@ -14,11 +14,12 @@ async function handleCartCommand(bot, chatId) {
     const carrito = carritoService.getCart(chatId.toString());
     
     if (!carrito || carrito.items.length === 0) {
-      return bot.sendMessage(
-        chatId, 
-        "Tu carrito está vacío. ¿En qué puedo ayudarte hoy?",
-        buttonService.generateEmptyCartButtons()
-      );
+      return bot.sendMessage(chatId, "Tu carrito está vacío. ¿En qué puedo ayudarte hoy?");
+      // return bot.sendMessage(
+      //   chatId, 
+      //   "Tu carrito está vacío. ¿En qué puedo ayudarte hoy?", 
+      //   buttonGeneratorService.generateEmptyCartButtons()
+      // );
     }
     
     let total = 0;
@@ -37,10 +38,10 @@ async function handleCartCommand(bot, chatId) {
     
     mensaje += `\n*Total: ${total.toFixed(2)}€*\n\n`;
     
-    // Enviar mensaje con botones
+    // Enviar mensaje con botones adecuados según número de items
     bot.sendMessage(chatId, mensaje, { 
       parse_mode: "Markdown",
-      ...buttonService.generateCartButtons(carrito.items.length)
+      // ...buttonGeneratorService.generateCartButtons(carrito.items.length)
     });
   } catch (error) {
     console.error("Error al mostrar el carrito:", error);
@@ -136,6 +137,8 @@ async function addToCart(bot, chatId, product, quantity) {
       `✅ He añadido ${quantity} unidad(es) de "${product.DescripcionArticulo}" a tu carrito.\n\n¿Deseas algo más?`,
       buttonService.generatePostAddButtons()
     );
+    // Establecer estado explícitamente como ASKING_FOR_MORE
+    stateService.setState(chatId, stateService.STATES.ASKING_FOR_MORE);
     
     return true;
   } catch (error) {

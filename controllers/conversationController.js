@@ -54,6 +54,7 @@ function handleEndConversation(bot, chatId) {
  */
 function isEndingConversation(text) {
   const endingPatterns = [
+    /^no.?$/i,
     /^no,?\s*(gracias|thanks)/i,
     /^nada\s*m[áa]s/i,
     /^no\s*(quiero|necesito)\s*(nada\s*)?m[áa]s/i,

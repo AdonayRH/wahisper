@@ -84,8 +84,10 @@ function generatePostAddButtons() {
       inline_keyboard: [
         [
           { text: "✅ Sí, seguir comprando", callback_data: "continue_shopping" },
-          { text: "🛒 Ver mi carrito", callback_data: "view_cart" },
-          { text: "❌ No, gracias", callback_data: "end_shopping" }
+          { text: "🛒 Ver mi carrito", callback_data: "view_cart" }
+        ],
+        [
+          { text: "💰 Tramitar pedido", callback_data: "checkout" }
         ]
       ]
     }
@@ -99,7 +101,9 @@ function generatePostAddButtons() {
  */
 function generateCartButtons(itemCount = 0) {
   const buttons = [
-    [{ text: "🛍️ Seguir comprando", callback_data: "continue_shopping" }]
+    [
+      { text: "🛍️ Seguir comprando", callback_data: "continue_shopping" }
+    ]
   ];
   
   if (itemCount > 0) {
@@ -123,6 +127,40 @@ function generateCartButtons(itemCount = 0) {
   return {
     reply_markup: {
       inline_keyboard: buttons
+    }
+  };
+}
+
+/**
+ * Genera botones para después de completar un pedido
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generatePostCheckoutButtons() {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "📦 Ver mis pedidos", callback_data: "view_orders" },
+          { text: "🛍️ Nueva compra", callback_data: "new_purchase" }
+        ]
+      ]
+    }
+  };
+}
+
+/**
+ * Genera botones para confirmar pago
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateCheckoutButtons() {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "✅ Confirmar pedido", callback_data: "confirm_checkout" },
+          { text: "❌ Cancelar", callback_data: "cancel_checkout" }
+        ]
+      ]
     }
   };
 }
@@ -198,6 +236,9 @@ module.exports = {
   generateConfirmButtons,
   generatePostAddButtons,
   generateCartButtons,
+  generateEmptyCartButtons,
+  generateCheckoutButtons,
+  generatePostCheckoutButtons,
   generateAdminButtons,
   generateInventoryButtons,
   generateInventoryConfirmButtons
