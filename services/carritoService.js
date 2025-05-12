@@ -149,6 +149,36 @@ function clearCart(telegramId) {
 }
 
 /**
+ * Actualiza la cantidad de un artículo en el carrito
+ * @param {string} telegramId - ID del usuario en Telegram
+ * @param {number} itemIndex - Índice del artículo a actualizar
+ * @param {number} newQuantity - Nueva cantidad
+ * @returns {object} - El carrito actualizado
+ */
+function updateItemQuantity(telegramId, itemIndex, newQuantity) {
+  try {
+    const carrito = carritos[telegramId];
+    if (!carrito || !carrito.items[itemIndex]) {
+      throw new Error("Artículo no encontrado en el carrito");
+    }
+
+    // Si la cantidad es 0 o negativa, eliminar el item
+    if (newQuantity <= 0) {
+      return removeFromCart(telegramId, itemIndex);
+    }
+
+    // Actualizar la cantidad
+    carrito.items[itemIndex].cantidad = newQuantity;
+    carrito.updatedAt = new Date().toISOString();
+    
+    return carrito;
+  } catch (error) {
+    console.error("Error al actualizar cantidad:", error);
+    throw error;
+  }
+}
+
+/**
  * Exporta el carrito completo en formato JSON para enviar al frontend
  * @param {string} telegramId - ID del usuario en Telegram
  * @returns {string} - Cadena JSON con los datos del carrito
@@ -193,5 +223,6 @@ module.exports = {
   removeFromCart,
   clearCart,
   exportCartToJSON,
-  saveUserData
+  saveUserData,
+  updateItemQuantity
 };

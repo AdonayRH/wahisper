@@ -10,6 +10,9 @@ module.exports = {
     ASKING_FOR_MORE: 'asking_for_more',
     ENDING: 'ending',
     WAITING_FOR_FILE: 'waiting_for_file',
-    CONFIRMING_INVENTORY: 'confirming_inventory'
+    CONFIRMING_INVENTORY: 'confirming_inventory',
+    CONFIRMING_REMOVE_ALL: 'confirming_remove_all',
+    ASKING_REMOVE_QUANTITY: 'asking_remove_quantity',
+    CONFIRMING_REMOVE_ITEM: 'confirming_remove_item'
   }
 };

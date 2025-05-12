@@ -95,18 +95,48 @@ function generatePostAddButtons() {
 /**
  * Genera botones para el carrito
  * @returns {object} - Objeto con configuración de botones
+ * @returns {object} - Objeto con configuración de botones
  */
-function generateCartButtons() {
+function generateCartButtons(itemCount = 0) {
+  const buttons = [
+    [{ text: "🛍️ Seguir comprando", callback_data: "continue_shopping" }]
+  ];
+  
+  if (itemCount > 0) {
+    buttons.unshift([
+      { text: "🗑️ Vaciar carrito", callback_data: "clear_cart" },
+      { text: "📤 Exportar carrito", callback_data: "export_cart" }
+    ]);
+    
+    buttons.unshift([
+      { text: "➖ Eliminar producto", callback_data: "start_remove_item" }
+    ]);
+  }
+  else if (data === 'start_remove_item') {
+    // Iniciar proceso de eliminación
+    bot.sendMessage(
+      chatId,
+      "¿Qué producto deseas eliminar? Indica su número o nombre."
+    );
+  }
+
+  return {
+    reply_markup: {
+      inline_keyboard: buttons
+    }
+  };
+}
+
+/**
+ * Genera botones para carrito vacío
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateEmptyCartButtons() {
   return {
     reply_markup: {
       inline_keyboard: [
-        [
-          { text: "🗑️ Vaciar carrito", callback_data: "clear_cart" },
-          { text: "📤 Exportar carrito", callback_data: "export_cart" }
-        ],
-        [
-          { text: "🛍️ Seguir comprando", callback_data: "continue_shopping" }
-        ]
+        [{ text: "🔍 Buscar productos", callback_data: "search_products" }],
+        [{ text: "🏠 Volver al inicio", callback_data: "go_home" }]
       ]
     }
   };
