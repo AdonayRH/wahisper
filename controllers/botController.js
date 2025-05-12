@@ -9,6 +9,7 @@ const cartController = require("./cartController");
 const productController = require("./productController");
 const conversationController = require("./conversationController");
 const adminController = require("./adminController");
+const checkoutController = require("./checkoutController");
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -179,6 +180,59 @@ bot.on("message", async (msg) => {
           );
         }
         
+      case stateService.STATES.REMOVING_ITEM:
+        // Intentar identificar qué producto quiere eliminar el usuario
+        const items = carritoService.getCart(chatId.toString())?.items || [];
+        
+        if (items.length === 0) {
+          bot.sendMessage(chatId, "Tu carrito está vacío. No hay productos para eliminar.");
+          stateService.setState(chatId, stateService.STATES.INITIAL);
+          return;
+        }
+        
+        // Primero intentar por número
+        let productIndex = -1;
+        
+        // Si el texto contiene números, intentar extraer el índice
+        const matches = text.match(/\d+/);
+        if (matches) {
+          const num = parseInt(matches[0]);
+          if (num > 0 && num <= items.length) {
+            productIndex = num - 1; // Ajustar al índice base-0
+          }
+        }
+        
+        // Si no se encontró por número, buscar por nombre
+        if (productIndex === -1) {
+          const query = text.toLowerCase().trim();
+          productIndex = items.findIndex(item => 
+            item.DescripcionArticulo.toLowerCase().includes(query)
+          );
+        }
+        
+        if (productIndex >= 0) {
+          // Eliminar el producto
+          const removedItem = items[productIndex].DescripcionArticulo;
+          carritoService.removeFromCart(chatId.toString(), productIndex);
+          
+          bot.sendMessage(
+            chatId, 
+            `✅ Producto "${removedItem}" eliminado del carrito.`
+          );
+          
+          // Mostrar carrito actualizado
+          cartController.handleCartCommand(bot, chatId);
+        } else {
+          bot.sendMessage(
+            chatId,
+            "No pude identificar el producto que deseas eliminar. Por favor, indica el número exacto del producto (1, 2, 3...) o su nombre preciso."
+          );
+        }
+      
+      // Restablecer estado
+      stateService.setState(chatId, stateService.STATES.INITIAL);
+      break;
+
       case stateService.STATES.ASKING_FOR_MORE:
         // Si el usuario quiere seguir comprando, resetear al estado inicial
         stateService.setState(chatId, stateService.STATES.INITIAL);
@@ -326,7 +380,7 @@ bot.on("message", async (msg) => {
             chatId,
             "Entendido. ¿Hay algo más en lo que pueda ayudarte?"
           );
-          stateService.setState(chatId, stateService.STATES.INITIAL);
+          stateService.setState(chatId, stateService.STATES.ASKING_FOR_MORE);
         }
         break;
         
@@ -367,7 +421,6 @@ bot.on("message", async (msg) => {
           console.log("CONFIRMATION recibida en estado incorrecto - tratando como QUERY");
           return productController.handleProductSearch(bot, chatId, text);
         }
-        break;
         
       case "QUANTITY":
         // Manejar especificación de cantidad
@@ -488,7 +541,51 @@ bot.on('callback_query', async (callbackQuery) => {
       bot.sendMessage(chatId, "Operación cancelada. Tu carrito no ha sido modificado.");
       return; // Añado return para evitar procesamiento adicional
     }
-    
+    else if (data === 'checkout') {
+      // Iniciar proceso de tramitación de pedido
+      checkoutController.handleCheckout(bot, chatId);
+    }
+    else if (data === 'confirm_checkout') {
+      // Confirmar pedido
+      checkoutController.handleConfirmCheckout(bot, chatId);
+    }
+    else if (data === 'cancel_checkout') {
+      // Cancelar tramitación
+      checkoutController.handleCancelCheckout(bot, chatId);
+    }
+    else if (data === 'new_purchase') {
+      // Iniciar nueva compra
+      checkoutController.handleNewPurchase(bot, chatId);
+    }
+    else if (data === 'view_orders') {
+      // Ver pedidos
+      checkoutController.handleViewOrders(bot, chatId);
+    }
+    else if (data === 'start_remove_item') {
+      // Iniciar proceso de eliminación de producto individual
+      bot.sendMessage(
+        chatId,
+        "¿Qué producto deseas eliminar? Indica su número (1, 2, 3...) o escribe su nombre."
+      );
+      stateService.setState(chatId, stateService.STATES.REMOVING_ITEM);
+    }
+    else if (data === 'search_products') {
+      // Iniciar búsqueda de productos
+      bot.sendMessage(
+        chatId,
+        "¿Qué tipo de producto estás buscando? Descríbelo y te mostraré las opciones disponibles."
+      );
+      stateService.setState(chatId, stateService.STATES.INITIAL);
+    }
+    else if (data === 'go_home') {
+      // Volver al inicio
+      bot.sendMessage(
+        chatId,
+        "¡Bienvenido nuevamente! ¿En qué puedo ayudarte hoy? Puedo mostrarte nuestros productos o responder a tus consultas."
+      );
+      stateService.setState(chatId, stateService.STATES.INITIAL);
+    }
+
     // Callbacks generales
     if (data.startsWith('select_')) {
       // Selección de producto
