@@ -44,7 +44,8 @@ async function handleProductSearch(bot, chatId, query) {
     bot.sendMessage(
       chatId, 
       "¿Cuál de estos productos te interesa?",
-      buttonService.generateProductButtons(context.lastMentionedArticles)
+      context.lastMentionedArticles
+      // buttonService.generateProductButtons(context.lastMentionedArticles)
     );
   } catch (error) {
     console.error("Error al buscar productos:", error);
@@ -77,7 +78,7 @@ async function handleProductSelection(bot, chatId, productIndex) {
     bot.sendMessage(
       chatId,
       `Has seleccionado "${product.DescripcionArticulo}" (${product.PVP}€). ¿Cuántas unidades deseas?`,
-      buttonService.generateQuantityButtons(productIndex)
+      // buttonService.generateQuantityButtons(productIndex)
     );
   } catch (error) {
     console.error("Error al manejar selección de producto:", error);
@@ -111,7 +112,7 @@ async function handleQuantitySelection(bot, chatId, productIndex, quantity) {
     bot.sendMessage(
       chatId,
       `¿Quieres añadir ${quantity} unidad(es) de "${product.DescripcionArticulo}" a tu carrito?`,
-      buttonService.generateConfirmButtons()
+      // buttonService.generateConfirmButtons()
     );
   } catch (error) {
     console.error("Error al manejar selección de cantidad:", error);

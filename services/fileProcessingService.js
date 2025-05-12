@@ -8,7 +8,7 @@ const Articulo = require('../models/articulo');
  * Convierte un valor a entero si es posible
  * @param {any} val - Valor a convertir
  * @returns {number|string} - Valor convertido
- */
+*/
 function parseInteger(val) {
   if (val === undefined || val === null || val === '') return 0;
   
@@ -27,7 +27,7 @@ function parseInteger(val) {
  * Convierte un valor a punto flotante si es posible
  * @param {any} val - Valor a convertir
  * @returns {number|string} - Valor convertido
- */
+*/
 function parseFloat(val) {
   if (val === undefined || val === null || val === '') return 0;
   
@@ -74,7 +74,7 @@ function normalizeArticulo(item) {
  * Procesa un archivo CSV
  * @param {string} filePath - Ruta al archivo
  * @returns {Promise<Array>} - Array de artículos procesados
- */
+*/
 function processCSV(filePath) {
   return new Promise((resolve, reject) => {
     const results = [];
@@ -87,7 +87,6 @@ function processCSV(filePath) {
           // Normalizar cada artículo
           const articulos = results.map(normalizeArticulo)
             .filter(art => art.CodigoArticulo && art.DescripcionArticulo); // Filtrar entradas inválidas
-          
           resolve(articulos);
         } catch (error) {
           reject(error);
@@ -101,7 +100,7 @@ function processCSV(filePath) {
  * Procesa un archivo Excel
  * @param {string} filePath - Ruta al archivo
  * @returns {Promise<Array>} - Array de artículos procesados
- */
+*/
 function processExcel(filePath) {
   return new Promise((resolve, reject) => {
     try {
@@ -142,7 +141,7 @@ function processExcel(filePath) {
  * Procesa un archivo subido y devuelve los artículos
  * @param {string} filePath - Ruta al archivo subido
  * @returns {Promise<Array>} - Array de artículos procesados
- */
+*/
 async function processFile(filePath) {
   const extension = path.extname(filePath).toLowerCase();
   
