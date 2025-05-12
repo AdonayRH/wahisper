@@ -13,6 +13,9 @@ module.exports = {
     CONFIRMING_INVENTORY: 'confirming_inventory',
     CONFIRMING_REMOVE_ALL: 'confirming_remove_all',
     ASKING_REMOVE_QUANTITY: 'asking_remove_quantity',
-    CONFIRMING_REMOVE_ITEM: 'confirming_remove_item'
+    CONFIRMING_REMOVE_ITEM: 'confirming_remove_item',
+    REMOVING_ITEM: 'removing_item',
+    CONFIRMING_CHECKOUT: 'confirming_checkout',
+    CHECKOUT_COMPLETED: 'checkout_completed'
   }
 };
