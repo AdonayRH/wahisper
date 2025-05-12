@@ -5,13 +5,13 @@ const stateService = require('../services/botStateService');
 const buttonService = require('../services/buttonGeneratorService');
 
 // Lista de IDs de usuarios administradores
-const ADMIN_IDS = process.env.ADMIN_TELEGRAM_ID ? process.env.ADMIN_TELEGRAM_ID.split(',') : ['123456789'];
+const ADMIN_IDS = process.env.ADMIN_TELEGRAM_IDS ? process.env.ADMIN_TELEGRAM_IDS.split(',') : ['2030605308'];;
 
 /**
  * Verifica si un usuario es administrador
  * @param {string} telegramId - ID de Telegram
  * @returns {boolean} - Indica si es administrador
- */
+*/
 function isAdmin(telegramId) {
   return ADMIN_IDS.includes(telegramId.toString());
 }
@@ -20,7 +20,7 @@ function isAdmin(telegramId) {
  * Maneja el comando de administrador
  * @param {object} bot - Instancia del bot
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 function handleAdminCommand(bot, msg) {
   const chatId = msg.chat.id;
   
@@ -37,7 +37,7 @@ function handleAdminCommand(bot, msg) {
  * Maneja la opción de gestión de inventario
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
- */
+*/
 function handleInventoryManagement(bot, chatId) {
   if (!isAdmin(chatId.toString())) {
     return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
@@ -50,7 +50,7 @@ function handleInventoryManagement(bot, chatId) {
  * Prepara para subir inventario
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
- */
+*/
 function handleUploadInventory(bot, chatId) {
   if (!isAdmin(chatId.toString())) {
     return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
@@ -71,7 +71,7 @@ function handleUploadInventory(bot, chatId) {
  * @param {object} bot - Instancia del bot
  * @param {object} msg - Mensaje de Telegram
  * @param {object} fileProcessingService - Servicio de procesamiento de archivos
- */
+*/
 async function processAdminDocument(bot, msg, fileProcessingService) {
   const chatId = msg.chat.id;
   const fileId = msg.document.file_id;
@@ -82,7 +82,6 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
       stateService.getContext(chatId).state !== 'waiting_for_file') {
     return;
   }
-  // controllers/adminController.js (continuación)
 
   // Verificar tipo de archivo
   const validExtensions = ['.csv', '.xlsx', '.xls'];
@@ -110,12 +109,7 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
     const uniqueFileName = `${Date.now()}-${fileName}`;
     const filePath = path.join(uploadDir, uniqueFileName);
     
-    // Descargar archivo
-    await bot.editMessageText("⏳ Descargando archivo...", {
-      chat_id: chatId,
-      message_id: processingMsg.message_id
-    });
-    
+    // Descargar archivo - Evitamos editar el mensaje aquí
     // Usar axios para descargar el archivo
     const response = await axios({
       method: 'GET',
@@ -132,27 +126,32 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
       writer.on('error', reject);
     });
     
-    // Informar que se está procesando
-    await bot.editMessageText("⏳ Procesando archivo...", {
-      chat_id: chatId,
-      message_id: processingMsg.message_id
-    });
+    // Informar que se está procesando - usamos sendMessage en lugar de editMessageText
+    // para evitar el error si los mensajes son idénticos
+    bot.deleteMessage(chatId, processingMsg.message_id)
+      .catch(err => console.error("Error al eliminar mensaje:", err));
+    
+    const newMsg = await bot.sendMessage(chatId, "⏳ Procesando archivo...");
     
     // Procesar archivo
     const articulos = await fileProcessingService.processFile(filePath);
     
-    // Mostrar vista previa
-    await bot.editMessageText(
-      `📋 Vista previa del archivo (${articulos.length} productos):\n\n` +
+    // Preparar vista previa
+    const previewText = `📋 Vista previa del archivo (${articulos.length} productos):\n\n` +
       articulos.slice(0, 5).map(a => 
-        `• ${a.CodigoArticulo}: ${a.DescripcionArticulo} - PVP: ${a.PVP}€ - Stock: ${a.stock}`
+        `• ${a.CodigoArticulo}: ${a.DescripcionArticulo.slice(0, 30)}${a.DescripcionArticulo.length > 30 ? '...' : ''} - PVP: ${a.PVP}€ - Unidades: ${a.unidades || 0}`
       ).join('\n') +
-      (articulos.length > 5 ? `\n\n...y ${articulos.length - 5} productos más` : ''),
-      {
-        chat_id: chatId,
-        message_id: processingMsg.message_id,
-        ...buttonService.generateInventoryConfirmButtons(uniqueFileName)
-      }
+      (articulos.length > 5 ? `\n\n...y ${articulos.length - 5} productos más` : '');
+    
+    // Eliminar mensaje de procesamiento
+    bot.deleteMessage(chatId, newMsg.message_id)
+      .catch(err => console.error("Error al eliminar mensaje:", err));
+      
+    // Enviar vista previa con botones
+    await bot.sendMessage(
+      chatId,
+      previewText,
+      buttonService.generateInventoryConfirmButtons(uniqueFileName)
     );
     
     // Actualizar estado
@@ -161,10 +160,12 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
     
   } catch (error) {
     console.error('Error procesando archivo:', error);
-    bot.editMessageText(`❌ Error al procesar el archivo: ${error.message}`, {
-      chat_id: chatId,
-      message_id: processingMsg.message_id
-    });
+    
+    // En caso de error, enviamos un nuevo mensaje en lugar de editar
+    bot.deleteMessage(chatId, processingMsg.message_id)
+      .catch(err => console.error("Error al eliminar mensaje:", err));
+      
+    bot.sendMessage(chatId, `❌ Error al procesar el archivo: ${error.message}`);
     
     // Restablecer estado
     stateService.setState(chatId, stateService.STATES.INITIAL);
@@ -178,7 +179,7 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
  * @param {string} messageId - ID del mensaje
  * @param {string} fileName - Nombre del archivo
  * @param {object} fileProcessingService - Servicio de procesamiento de archivos
- */
+*/
 async function handleSaveInventory(bot, chatId, messageId, fileName, fileProcessingService) {
   const filePath = path.join(__dirname, '../uploads', fileName);
   
@@ -187,13 +188,13 @@ async function handleSaveInventory(bot, chatId, messageId, fileName, fileProcess
     return bot.sendMessage(chatId, "No se puede procesar esta solicitud");
   }
   
-  // Informar que se está procesando
-  const processingMsg = await bot.editMessageText("⏳ Guardando inventario en base de datos...", {
-    chat_id: chatId,
-    message_id: messageId
-  });
-  
   try {
+    // Eliminar mensaje anterior y enviar nuevo
+    bot.deleteMessage(chatId, messageId)
+      .catch(err => console.error("Error al eliminar mensaje:", err));
+      
+    const processingMsg = await bot.sendMessage(chatId, "⏳ Guardando inventario en base de datos...");
+    
     // Procesar y guardar en BD
     const articulos = await fileProcessingService.processFile(filePath);
     const result = await fileProcessingService.saveArticulos(articulos);
@@ -201,17 +202,18 @@ async function handleSaveInventory(bot, chatId, messageId, fileName, fileProcess
     // Eliminar archivo temporal
     await fs.remove(filePath);
     
+    // Eliminar mensaje de procesamiento
+    bot.deleteMessage(chatId, processingMsg.message_id)
+      .catch(err => console.error("Error al eliminar mensaje:", err));
+      
     // Informar resultado
-    bot.editMessageText(
+    bot.sendMessage(
+      chatId,
       `✅ Inventario actualizado correctamente:\n\n` +
       `• Total productos: ${result.total}\n` +
       `• Nuevos productos: ${result.created}\n` +
       `• Productos actualizados: ${result.updated}\n` +
-      `• Errores: ${result.errors}`,
-      {
-        chat_id: chatId,
-        message_id: processingMsg.message_id
-      }
+      `• Errores: ${result.errors || 0}`
     );
     
     // Restablecer estado
@@ -220,13 +222,13 @@ async function handleSaveInventory(bot, chatId, messageId, fileName, fileProcess
     
   } catch (error) {
     console.error('Error guardando inventario:', error);
-    bot.editMessageText(`❌ Error al guardar el inventario: ${error.message}`, {
-      chat_id: chatId,
-      message_id: processingMsg.message_id
-    });
+    
+    // En caso de error, enviar nuevo mensaje
+    bot.sendMessage(chatId, `❌ Error al guardar el inventario: ${error.message}`);
     
     // Restablecer estado
     stateService.setState(chatId, stateService.STATES.INITIAL);
+    stateService.setContextValue(chatId, 'pendingFile', undefined);
   }
 }
 
@@ -235,7 +237,7 @@ async function handleSaveInventory(bot, chatId, messageId, fileName, fileProcess
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
  * @param {number} messageId - ID del mensaje
- */
+*/
 async function handleCancelInventory(bot, chatId, messageId) {
   const context = stateService.getContext(chatId);
   const fileName = context.pendingFile;
@@ -247,11 +249,12 @@ async function handleCancelInventory(bot, chatId, messageId) {
     }
   }
   
+  // Eliminar mensaje anterior y enviar nuevo
+  bot.deleteMessage(chatId, messageId)
+    .catch(err => console.error("Error al eliminar mensaje:", err));
+    
   // Informar cancelación
-  bot.editMessageText("❌ Subida de inventario cancelada", {
-    chat_id: chatId,
-    message_id: messageId
-  });
+  bot.sendMessage(chatId, "❌ Subida de inventario cancelada");
   
   // Restablecer estado
   stateService.setState(chatId, stateService.STATES.INITIAL);
