@@ -136,6 +136,8 @@ async function addToCart(bot, chatId, product, quantity) {
       `✅ He añadido ${quantity} unidad(es) de "${product.DescripcionArticulo}" a tu carrito.\n\n¿Deseas algo más?`,
       buttonService.generatePostAddButtons()
     );
+    // Establecer estado explícitamente como ASKING_FOR_MORE
+    stateService.setState(chatId, stateService.STATES.ASKING_FOR_MORE);
     
     return true;
   } catch (error) {

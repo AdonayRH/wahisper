@@ -326,7 +326,7 @@ bot.on("message", async (msg) => {
             chatId,
             "Entendido. ¿Hay algo más en lo que pueda ayudarte?"
           );
-          stateService.setState(chatId, stateService.STATES.INITIAL);
+          stateService.setState(chatId, stateService.STATES.ASKING_FOR_MORE);
         }
         break;
         
@@ -367,7 +367,6 @@ bot.on("message", async (msg) => {
           console.log("CONFIRMATION recibida en estado incorrecto - tratando como QUERY");
           return productController.handleProductSearch(bot, chatId, text);
         }
-        break;
         
       case "QUANTITY":
         // Manejar especificación de cantidad
