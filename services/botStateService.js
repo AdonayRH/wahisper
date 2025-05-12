@@ -1,14 +1,5 @@
-// Gestión del estado de la conversación
-const STATES = {
-  INITIAL: 'initial',
-  SHOWING_PRODUCTS: 'showing_products',
-  ASKING_CONFIRMATION: 'asking_confirmation',
-  ASKING_QUANTITY: 'asking_quantity',
-  ASKING_FOR_MORE: 'asking_for_more',
-  ENDING: 'ending',
-  WAITING_FOR_FILE: 'waiting_for_file',
-  CONFIRMING_INVENTORY: 'confirming_inventory'
-};
+// Constantes para los estados de la conversación
+const STATES = require('../config/constants').STATES;
 
 // Variable para almacenar el contexto de la conversación
 const conversationContext = {};
