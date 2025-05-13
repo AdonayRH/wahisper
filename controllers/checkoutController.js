@@ -6,12 +6,11 @@ const orderService = require('../services/orderService');
 const inventoryService = require('../services/inventoryService');
 
 /**
- * Maneja el proceso de tramitación del pedido
- * @param {object} bot - Instancia del bot
- * @param {number} chatId - ID del chat
+ * Actualizar la función handleCheckout para mejorar la experiencia del usuario
  */
 async function handleCheckout(bot, chatId) {
   try {
+    console.log(`Procesando solicitud de checkout para usuario ${chatId}`);
     const carrito = carritoService.getCart(chatId.toString());
     
     if (!carrito || carrito.items.length === 0) {
@@ -22,8 +21,18 @@ async function handleCheckout(bot, chatId) {
       );
     }
     
+    // Mostrar mensaje de procesamiento
+    const processingMsg = await bot.sendMessage(
+      chatId,
+      "⏳ Preparando tu pedido, un momento por favor..."
+    );
+    
     // Verificar stock antes de proceder
     const stockVerification = await inventoryService.verifyStock(carrito.items);
+    
+    // Borrar mensaje de procesamiento
+    await bot.deleteMessage(chatId, processingMsg.message_id)
+      .catch(err => console.error("Error al borrar mensaje de procesamiento:", err));
     
     if (!stockVerification.success) {
       // Si hay productos sin stock suficiente, informar al usuario
@@ -50,7 +59,7 @@ async function handleCheckout(bot, chatId) {
       );
     }
     
-    // Calcular el total
+    // Calcular el total con formato de moneda
     let total = 0;
     carrito.items.forEach(item => {
       const precio = parseFloat(item.precio) || 0;
@@ -58,7 +67,7 @@ async function handleCheckout(bot, chatId) {
       total += precio * cantidad;
     });
     
-    // Crear resumen detallado del pedido
+    // Crear resumen detallado del pedido con emojis para mejor visualización
     let mensaje = `🛍️ *Resumen de tu pedido:*\n\n`;
     
     carrito.items.forEach((item, index) => {
@@ -70,7 +79,7 @@ async function handleCheckout(bot, chatId) {
                 `   ${cantidad} x ${precio.toFixed(2)}€ = ${subtotal.toFixed(2)}€\n`;
     });
     
-    mensaje += `\n*Total a pagar: ${total.toFixed(2)}€*\n\n` +
+    mensaje += `\n💰 *Total a pagar: ${total.toFixed(2)}€*\n\n` +
               `¿Deseas confirmar este pedido?`;
     
     // Enviar mensaje con botones de confirmación
@@ -79,12 +88,23 @@ async function handleCheckout(bot, chatId) {
       mensaje,
       { 
         parse_mode: "Markdown",
-        ...buttonGeneratorService.generateCheckoutButtons()
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "✅ Confirmar pedido", callback_data: "confirm_checkout" },
+              { text: "❌ Cancelar", callback_data: "cancel_checkout" }
+            ],
+            [
+              { text: "🛒 Modificar carrito", callback_data: "view_cart" }
+            ]
+          ]
+        }
       }
     );
     
     // Establecer estado
     stateService.setState(chatId, stateService.STATES.CONFIRMING_CHECKOUT);
+    console.log(`Usuario ${chatId} en estado CONFIRMING_CHECKOUT`);
   } catch (error) {
     console.error("Error al tramitar pedido:", error);
     bot.sendMessage(chatId, "Hubo un error al tramitar tu pedido. Por favor, inténtalo de nuevo.");

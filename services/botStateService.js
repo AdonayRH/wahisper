@@ -14,7 +14,12 @@ function initContext(chatId) {
       selectedArticleIndex: -1,
       pendingAddToCart: false,
       lastActivity: Date.now(),
-      lastProductsShown: []
+      lastProductsShown: [],
+      selectedAddIndex: null,
+      selectedAddProduct: null,
+      selectedRemoveIndex: null,
+      selectedRemoveProduct: null,
+      removeQuantity: null
     };
   }
   return conversationContext[chatId];
