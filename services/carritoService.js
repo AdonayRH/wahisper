@@ -148,6 +148,33 @@ function clearCart(telegramId) {
   }
 }
 
+
+/**
+ * Actualiza un artículo en el carrito
+ * @param {string} telegramId - ID del usuario en Telegram
+ * @param {number} itemIndex - Índice del artículo a actualizar
+ * @param {object} updatedItem - Objeto con los datos actualizados
+ * @returns {object} - El carrito actualizado
+ */
+function updateCartItem(telegramId, itemIndex, updatedItem) {
+  try {
+    const carrito = carritos[telegramId];
+    
+    if (!carrito || !carrito.items || carrito.items.length <= itemIndex) {
+      throw new Error("Artículo no encontrado en el carrito");
+    }
+    
+    // Actualizar el artículo
+    carrito.items[itemIndex] = updatedItem;
+    carrito.updatedAt = new Date().toISOString();
+    
+    return carrito;
+  } catch (error) {
+    console.error("Error al actualizar artículo del carrito:", error);
+    throw error;
+  }
+}
+
 /**
  * Actualiza la cantidad de un artículo en el carrito
  * @param {string} telegramId - ID del usuario en Telegram
@@ -224,5 +251,6 @@ module.exports = {
   clearCart,
   exportCartToJSON,
   saveUserData,
-  updateItemQuantity
+  updateItemQuantity,
+  updateCartItem
 };

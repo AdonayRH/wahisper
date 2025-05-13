@@ -119,7 +119,7 @@ async function handleClearCartCommand(bot, chatId) {
 }
 
 /**
- * Añade un producto al carrito
+ * Añade un producto al carrito verificando el stock disponible
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
  * @param {object} product - Producto a añadir
@@ -128,7 +128,45 @@ async function handleClearCartCommand(bot, chatId) {
  */
 async function addToCart(bot, chatId, product, quantity) {
   try {
-    // Añadir al carrito
+    // Verificar stock disponible
+    const Articulo = require('../models/articulo');
+    const articuloEnBD = await Articulo.findOne({ CodigoArticulo: product.CodigoArticulo });
+    
+    if (!articuloEnBD) {
+      bot.sendMessage(
+        chatId,
+        `Lo siento, no pude encontrar el producto "${product.DescripcionArticulo}" en el inventario actual.`
+      );
+      return false;
+    }
+    
+    const stockDisponible = articuloEnBD.unidades || 0;
+    
+    // Verificar si ya existe en el carrito
+    const carrito = carritoService.getCart(chatId.toString());
+    let cantidadActual = 0;
+    
+    if (carrito && carrito.items) {
+      const itemExistente = carrito.items.find(item => item.CodigoArticulo === product.CodigoArticulo);
+      if (itemExistente) {
+        cantidadActual = itemExistente.cantidad || 0;
+      }
+    }
+    
+    const totalDeseado = cantidadActual + quantity;
+    
+    if (totalDeseado > stockDisponible) {
+      bot.sendMessage(
+        chatId,
+        `Lo siento, solo hay ${stockDisponible} unidad(es) disponibles de este producto.\n` +
+        (cantidadActual > 0 ? 
+          `Ya tienes ${cantidadActual} en tu carrito, por lo que solo puedes añadir ${Math.max(0, stockDisponible - cantidadActual)} más.` :
+          `Por favor, selecciona una cantidad igual o menor a ${stockDisponible}.`)
+      );
+      return false;
+    }
+    
+    // Si hay suficiente stock, añadir al carrito
     carritoService.addToCart(chatId.toString(), product, quantity);
     
     // Notificar al usuario
@@ -137,8 +175,6 @@ async function addToCart(bot, chatId, product, quantity) {
       `✅ He añadido ${quantity} unidad(es) de "${product.DescripcionArticulo}" a tu carrito.\n\n¿Deseas algo más?`,
       buttonService.generatePostAddButtons()
     );
-    // Establecer estado explícitamente como ASKING_FOR_MORE
-    stateService.setState(chatId, stateService.STATES.ASKING_FOR_MORE);
     
     return true;
   } catch (error) {
@@ -339,6 +375,199 @@ async function handleConfirmRemove(bot, chatId) {
   }
 }
 
+
+
+// Modificar en cartController.js
+
+/**
+ * Inicia el proceso para añadir unidades a un producto en el carrito
+ * @param {object} bot - Instancia del bot
+ * @param {number} chatId - ID del chat
+ * @param {string|number} productReference - Referencia al producto (nombre o índice)
+ */
+async function handleStartAddUnits(bot, chatId, productReference) {
+  try {
+    const carrito = carritoService.getCart(chatId.toString());
+    
+    if (!carrito || carrito.items.length === 0) {
+      return bot.sendMessage(chatId, "Tu carrito está vacío. No hay productos para modificar.");
+    }
+    
+    let productIndex = -1;
+    
+    // Si es un número, tomarlo como índice (ajustando base-0)
+    if (typeof productReference === 'number' || !isNaN(parseInt(productReference))) {
+      const index = typeof productReference === 'number' ? productReference : parseInt(productReference);
+      if (index > 0 && index <= carrito.items.length) {
+        productIndex = index - 1;
+      }
+    }
+    // Si es texto, buscar por nombre
+    else if (typeof productReference === 'string') {
+      const query = productReference.toLowerCase().trim();
+      productIndex = carrito.items.findIndex(item => 
+        item.DescripcionArticulo.toLowerCase().includes(query)
+      );
+    }
+    
+    // Si no se encontró el producto
+    if (productIndex === -1) {
+      await handleCartCommand(bot, chatId); // Mostrar carrito
+      return bot.sendMessage(
+        chatId,
+        "No pude identificar el producto. Por favor, indica el número exacto o nombre del producto al que quieres añadir unidades."
+      );
+    }
+    
+    // Guardar contexto para el siguiente paso
+    console.log(`Guardando en contexto: selectedAddIndex=${productIndex}, producto=${carrito.items[productIndex].DescripcionArticulo}`);
+    
+    // Primero guardamos los valores específicos
+    stateService.setContextValue(chatId, 'selectedAddIndex', productIndex);
+    stateService.setContextValue(chatId, 'selectedAddProduct', carrito.items[productIndex]);
+    
+    // Luego cambiamos el estado - esto debe ir después para no borrar los valores
+    stateService.setState(chatId, stateService.STATES.ADDING_UNITS);
+    
+    // Solicitar la cantidad a añadir
+    const producto = carrito.items[productIndex];
+    
+    bot.sendMessage(
+      chatId,
+      `Actualmente tienes ${producto.cantidad} unidad(es) de "${producto.DescripcionArticulo}" en tu carrito.\n` +
+      `¿Cuántas unidades adicionales quieres añadir?`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "1", callback_data: "add_qty_1" },
+              { text: "2", callback_data: "add_qty_2" },
+              { text: "5", callback_data: "add_qty_5" }
+            ],
+            [
+              { text: "Otra cantidad", callback_data: "add_qty_custom" }
+            ]
+          ]
+        }
+      }
+    );
+    
+  } catch (error) {
+    console.error("Error al iniciar proceso de añadir unidades:", error);
+    bot.sendMessage(chatId, "Hubo un error al procesar tu solicitud. Por favor, intenta de nuevo.");
+    stateService.setState(chatId, stateService.STATES.INITIAL);
+  }
+}
+
+/**
+ * Procesa la cantidad a añadir a un producto
+ * @param {object} bot - Instancia del bot
+ * @param {number} chatId - ID del chat
+ * @param {number|string} quantity - Cantidad a añadir
+ */
+async function handleAddQuantity(bot, chatId, quantity) {
+  try {
+    const context = stateService.getContext(chatId);
+    console.log("Estado actual del contexto en handleAddQuantity:", JSON.stringify(context, null, 2));
+    
+    if (context.selectedAddIndex === undefined || context.selectedAddIndex === null) {
+      console.log("Error: No se encontró selectedAddIndex en el contexto");
+      return bot.sendMessage(chatId, "Ha ocurrido un error al procesar la solicitud. Por favor, inicia de nuevo el proceso de añadir unidades.");
+    }
+    
+    const carrito = carritoService.getCart(chatId.toString());
+    if (!carrito || carrito.items.length === 0) {
+      return bot.sendMessage(chatId, "Tu carrito está vacío. No hay productos para modificar.");
+    }
+    
+    if (context.selectedAddIndex >= carrito.items.length) {
+      return bot.sendMessage(chatId, "El producto seleccionado ya no está en tu carrito.");
+    }
+    
+    const producto = carrito.items[context.selectedAddIndex];
+    const cantidadActual = producto.cantidad;
+    let cantidadAdicional = 0;
+    
+    // Procesar la cantidad (desde botón o texto)
+    if (quantity === 'custom') {
+      // Si eligió "Otra cantidad", cambiar estado y solicitar
+      stateService.setState(chatId, stateService.STATES.ASKING_ADD_QUANTITY);
+      return bot.sendMessage(
+        chatId,
+        "Por favor, indica cuántas unidades adicionales quieres añadir:"
+      );
+    } else {
+      // Convertir a número
+      cantidadAdicional = parseInt(quantity);
+      if (isNaN(cantidadAdicional) || cantidadAdicional <= 0) {
+        return bot.sendMessage(
+          chatId,
+          "Por favor, indica un número válido mayor que cero."
+        );
+      }
+    }
+    
+    // Verificar stock disponible en la base de datos
+    // Importar el modelo de Artículo (asegúrate de tener la ruta correcta)
+    const Articulo = require('../models/articulo');
+    
+    try {
+      // Buscar el artículo en la base de datos por su código
+      const articuloEnBD = await Articulo.findOne({ CodigoArticulo: producto.CodigoArticulo });
+      
+      if (!articuloEnBD) {
+        return bot.sendMessage(
+          chatId,
+          `Lo siento, no pude encontrar el producto "${producto.DescripcionArticulo}" en el inventario actual.`
+        );
+      }
+      
+      // Verificar si hay suficiente stock
+      const stockDisponible = articuloEnBD.unidades || 0;
+      const totalDeseado = cantidadActual + cantidadAdicional;
+      
+      if (totalDeseado > stockDisponible) {
+        return bot.sendMessage(
+          chatId,
+          `Lo siento, solo hay ${stockDisponible} unidad(es) disponibles de este producto.\n` +
+          `Ya tienes ${cantidadActual} en tu carrito, por lo que solo puedes añadir ${Math.max(0, stockDisponible - cantidadActual)} más.`
+        );
+      }
+      
+      // Si hay suficiente stock, actualizar la cantidad del producto
+      producto.cantidad = totalDeseado;
+      
+      // Guardar cambios en el carrito
+      carritoService.updateCartItem(chatId.toString(), context.selectedAddIndex, producto);
+      
+      // Notificar al usuario
+      bot.sendMessage(
+        chatId,
+        `✅ He añadido ${cantidadAdicional} unidad(es) adicionales de "${producto.DescripcionArticulo}" a tu carrito.\n` +
+        `Ahora tienes un total de ${producto.cantidad} unidad(es) de ${stockDisponible} disponibles.`
+      );
+      
+      // Mostrar carrito actualizado
+      await handleCartCommand(bot, chatId);
+      
+      // Resetear estado
+      stateService.setState(chatId, stateService.STATES.INITIAL);
+      
+    } catch (dbError) {
+      console.error("Error al verificar stock en base de datos:", dbError);
+      return bot.sendMessage(
+        chatId,
+        "Hubo un problema al verificar la disponibilidad del producto. Por favor, intenta de nuevo más tarde."
+      );
+    }
+    
+  } catch (error) {
+    console.error("Error al añadir unidades:", error);
+    bot.sendMessage(chatId, "Hubo un error al añadir unidades. Por favor, intenta de nuevo.");
+    stateService.setState(chatId, stateService.STATES.INITIAL);
+  }
+}
+
 /**
  * Inicia el proceso de vaciado del carrito
  * @param {object} bot - Instancia del bot
@@ -414,5 +643,8 @@ module.exports = {
   handleStartRemoveItem,
   handleRemoveQuantity,
   handleConfirmRemove,
-  handleStartClearCart 
+  handleStartClearCart,
+  handleAddQuantity,
+  handleStartAddUnits,
+  updateItemQuantity,
 };
