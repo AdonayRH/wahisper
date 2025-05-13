@@ -24,7 +24,14 @@ async function getEmbedding(text) {
 
 async function generarEmbeddings() {
   try {
-    const articulos = await Articulo.find({ embedding: { $exists: false } });
+    // Cambia la consulta para seleccionar solo los artículos con un array vacío en "embedding"
+    const articulos = await Articulo.find({ 
+      $or: [
+        { embedding: { $exists: false } },
+        { embedding: { $size: 1536 } } // Array vacío
+      ]
+    });
+
     if (!articulos.length) {
       console.log("✅ Todos los artículos ya tienen embedding.");
       return process.exit(0);
@@ -41,7 +48,7 @@ async function generarEmbeddings() {
       try {
         const embedding = await getEmbedding(desc);
 
-        // 👇 guardado directo sin usar art.save()
+        // 👇 Actualiza directamente el campo embedding
         await Articulo.updateOne(
           { _id: art._id },
           { $set: { embedding } }
