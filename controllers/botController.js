@@ -13,6 +13,58 @@ const checkoutController = require("./checkoutController");
 const fs = require('fs-extra');
 const path = require('path');
 
+
+// Función auxiliar para reconocer comandos de checkout
+/**
+ * Verifica si el mensaje del usuario indica una intención de checkout
+ * @param {string} text - Texto del mensaje
+ * @returns {boolean} - Indica si es un comando de checkout
+ */
+function isCheckoutCommand(text) {
+  if (!text) return false;
+  
+  const checkoutPatterns = [
+    /\b(tramitar|finalizar|procesar|pagar|completar)\s+(pedido|compra|carrito)\b/i,
+    /\b(checkout|pago|pagar|comprar)\b/i,
+    /\bquiero\s+(pagar|comprar|finalizar)\b/i,
+    /\brealizar\s+pedido\b/i,
+    /\bproceder\s+(al|con el)\s+pago\b/i
+  ];
+  
+  return checkoutPatterns.some(pattern => pattern.test(text));
+}
+
+/**
+ * Analiza el texto del usuario para detectar acciones secundarias
+ * @param {string} text - Texto del mensaje
+ * @returns {object} - Objeto con acciones detectadas
+*/
+function extractSecondaryActions(text) {
+  if (!text) return { hasCheckout: false };
+  
+  const normalizedText = text.toLowerCase().trim();
+  
+  // Patrones para detectar intención de checkout
+  const checkoutKeywords = [
+    'tramitar', 'pagar', 'comprar', 'finalizar compra', 'realizar pedido',
+    'procesar pedido', 'checkout', 'completar compra', 'pago'
+  ];
+  
+  // Verificar si hay una intención de checkout
+  const hasCheckout = checkoutKeywords.some(keyword => 
+    normalizedText.includes(keyword)
+  );
+  
+  // Se pueden añadir más detecciones secundarias aquí
+  
+  return {
+    hasCheckout
+  };
+}
+
+
+
+
 // Configurar intervalos de limpieza de contextos
 setInterval(() => {
   stateService.cleanupInactiveContexts(30); // 30 minutos
@@ -179,7 +231,31 @@ bot.on("message", async (msg) => {
             "Por favor, introduce un número válido para la cantidad:"
           );
         }
-        
+      
+      case stateService.STATES.ADDING_UNITS:
+      case stateService.STATES.ASKING_ADD_QUANTITY:
+        // Manejar la respuesta de cantidad a añadir
+        try {
+          // Intentar extraer un número del texto
+          const numberMatch = text.match(/\d+/);
+          if (numberMatch) {
+            const cantidad = parseInt(numberMatch[0]);
+            return cartController.handleAddQuantity(bot, chatId, cantidad);
+          }
+          
+          // Si no hay coincidencia numérica clara, informar al usuario
+          return bot.sendMessage(
+            chatId,
+            "Por favor, indica un número válido para la cantidad adicional que deseas añadir."
+          );
+        } catch (error) {
+          console.error("Error al procesar cantidad a añadir:", error);
+          return bot.sendMessage(
+            chatId,
+            "Hubo un error al procesar la cantidad. Por favor, intenta de nuevo."
+          );
+        }
+
       case stateService.STATES.REMOVING_ITEM:
         // Intentar identificar qué producto quiere eliminar el usuario
         const items = carritoService.getCart(chatId.toString())?.items || [];
@@ -336,7 +412,22 @@ bot.on("message", async (msg) => {
       case "VIEW_CART":
         // Manejar la intención de ver el carrito
         return cartController.handleCartCommand(bot, chatId);
-        
+      
+      case "ADD_UNITS":
+      case "ADD_MORE":
+        // Verificar si se ha mencionado un producto específico o un índice
+        if (intentAnalysis.productReference) {
+          return cartController.handleStartAddUnits(bot, chatId, intentAnalysis.productReference);
+        } 
+        else {
+          // Mostrar el carrito y pedir especificar a qué producto añadir
+          await cartController.handleCartCommand(bot, chatId);
+          return bot.sendMessage(
+            chatId,
+            "¿A qué producto deseas añadir unidades? Puedes indicar su número o nombre."
+          );
+        }
+
       case "REMOVE_FROM_CART":
         // Verificar si se ha mencionado un producto específico o un índice
         if (intentAnalysis.productReference) {
@@ -354,7 +445,56 @@ bot.on("message", async (msg) => {
           );
         }
         break;
+
+      case "CHECKOUT":
+        // Verificar si el carrito está vacío
+        const carritoCheckout = carritoService.getCart(chatId.toString());
         
+        if (!carritoCheckout || carritoCheckout.items.length === 0) {
+          return bot.sendMessage(
+            chatId,
+            "Tu carrito está vacío. Añade productos antes de tramitar tu pedido.",
+            buttonService.generateEmptyCartButtons()
+          );
+        }
+        
+        // Iniciar proceso de tramitación
+        console.log(`Iniciando proceso de checkout para usuario ${chatId}`);
+        if (isCheckoutCommand(text)) {
+          console.log("Comando de checkout detectado por patrón textual");
+          
+          const carritoCheckout = carritoService.getCart(chatId.toString());
+          
+          if (!carritoCheckout || carritoCheckout.items.length === 0) {
+            return bot.sendMessage(
+              chatId,
+              "Tu carrito está vacío. Añade productos antes de tramitar tu pedido.",
+              buttonService.generateEmptyCartButtons()
+            );
+          }
+          return checkoutController.handleCheckout(bot, chatId);
+        }
+        // Extraer acciones secundarias del texto
+        const secondaryActions = extractSecondaryActions(text);
+
+        // Si hay una intención secundaria de checkout
+        if (secondaryActions.hasCheckout) {
+          console.log("Intención secundaria de checkout detectada");
+          
+          const carritoCheckout = carritoService.getCart(chatId.toString());
+          
+          if (!carritoCheckout || carritoCheckout.items.length === 0) {
+            return bot.sendMessage(
+              chatId,
+              "Tu carrito está vacío. Añade productos antes de tramitar tu pedido.",
+              buttonGeneratorService.generateEmptyCartButtons()
+            );
+          }
+          
+          return checkoutController.handleCheckout(bot, chatId);
+        }
+        return checkoutController.handleCheckout(bot, chatId);
+
       case "CLEAR_CART":
         return cartController.handleStartClearCart(bot, chatId);
         
@@ -432,6 +572,44 @@ bot.on("message", async (msg) => {
               chatId, 
               context.selectedArticleIndex, 
               intentAnalysis.quantityMentioned
+            );
+          }
+          else if (context.state === stateService.STATES.ADDING_UNITS || 
+            context.state === stateService.STATES.ASKING_ADD_QUANTITY) {
+            console.log("Procesando cantidad para añadir unidades");
+            console.log("Contexto actual:", JSON.stringify(context, null, 2));
+            
+            // Verificar que tenemos toda la información necesaria
+            if (context.selectedAddIndex === undefined || context.selectedAddIndex === null) {
+              console.error("Error: No se encontró selectedAddIndex en el contexto");
+              return bot.sendMessage(
+                chatId,
+                "Ha ocurrido un error al procesar tu solicitud. Por favor, intenta añadir unidades nuevamente."
+              );
+            }
+            
+            // Si hay una cantidad mencionada, procesarla
+            if (intentAnalysis.quantityMentioned && intentAnalysis.quantityMentioned > 0) {
+              console.log(`Cantidad detectada: ${intentAnalysis.quantityMentioned}`);
+              return cartController.handleAddQuantity(
+                bot,
+                chatId,
+                intentAnalysis.quantityMentioned
+              );
+            }
+            
+            // Si el mensaje contiene un número, usarlo
+            const matches = text.match(/\d+/);
+            if (matches && matches.length > 0) {
+              const cantidad = parseInt(matches[0]);
+              console.log(`Número extraído del texto: ${cantidad}`);
+              return cartController.handleAddQuantity(bot, chatId, cantidad);
+            }
+            
+            // Si no se pudo determinar la cantidad
+            return bot.sendMessage(
+              chatId,
+              "Por favor, indica cuántas unidades adicionales quieres añadir (solo el número)."
             );
           }
           

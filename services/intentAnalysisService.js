@@ -32,6 +32,7 @@ async function analyzeIntent(message, context = {}) {
     systemMessage += "\n- Expresiones como 'no, gracias', 'nada más', 'eso es todo', 'ya está', 'listo', 'suficiente'";
     systemMessage += "\n- Cualquier mensaje que indique que el usuario ha terminado o no desea continuar";
     systemMessage += "\n- Si dice 'adiós', 'hasta luego', 'gracias por todo', etc.";
+
     // Instrucciones específicas para ASKING_FOR_MORE state
     systemMessage += "\n\nPrioridad alta: Si el usuario está en el estado ASKING_FOR_MORE y responde negativamente (no, nada más, etc.), SIEMPRE clasifica como FAREWELL con confianza alta.";
     
@@ -49,19 +50,40 @@ async function analyzeIntent(message, context = {}) {
     systemMessage += "\n- 'No por ahora'";
     systemMessage += "\n- Simple respuesta 'No' cuando se ha preguntado si quiere algo más";
 
-     // Ejemplos para eliminar del carrito
+    // Ejemplos para eliminar del carrito
     systemMessage += "\n\nEjemplos para REMOVE_FROM_CART:";
     systemMessage += "\n- 'Quiero eliminar las tijeras del carrito'";
     systemMessage += "\n- 'Elimina el segundo producto'";
     systemMessage += "\n- 'Quita el bolígrafo de mi carrito'";
     systemMessage += "\n- 'Eliminar producto 3'";
     
+    // Añadir ejemplos para agregar unidades
+    systemMessage += "\n\nEjemplos para ADD_UNITS o ADD_MORE:";
+    systemMessage += "\n- 'Añadir más unidades del producto 1'";
+    systemMessage += "\n- 'Quiero añadir 2 más del bolígrafo'";
+    systemMessage += "\n- 'Agregar más lápices'";
+    systemMessage += "\n- 'Aumentar la cantidad del tercer producto'";
+    systemMessage += "\n- 'Poner más unidades del bolígrafo azul'";
+    systemMessage += "\n- 'Cuando el usuario mencione una cantidad, ya sea como número (2, 5, 10) o como texto (dos, cinco, diez), debes incluirla en el campo quantityMentioned. Presta especial atención a convertir correctamente palabras a números.'";
+
     // Ejemplos para vaciar el carrito
     systemMessage += "\n\nEjemplos para CLEAR_CART:";
     systemMessage += "\n- 'Vacía mi carrito'";
     systemMessage += "\n- 'Quiero eliminar todo del carrito'";
     systemMessage += "\n- 'Limpia el carrito por completo'";
     systemMessage += "\n- 'Borra todos los productos'";
+
+    // Añadir ejemplos para la intención CHECKOUT
+    systemMessage += "\n\nEjemplos para CHECKOUT:";
+    systemMessage += "\n- 'Quiero tramitar mi pedido'";
+    systemMessage += "\n- 'Finalizar compra'";
+    systemMessage += "\n- 'Proceder con el pago'";
+    systemMessage += "\n- 'Tramitar carrito'";
+    systemMessage += "\n- 'Pagar'";
+    systemMessage += "\n- 'Completar pedido'";
+    systemMessage += "\n- 'Realizar pedido'";
+    systemMessage += "\n- 'Comprar los productos'";
+    systemMessage += "\n- 'Quiero pagar ahora'";
 
     // Agregar aclaración sobre expreciones que no deben ser clasificadas como CONFIRMATION
     systemMessage += "\n\nIMPORTANTE: La frase 'quiero X' o 'muestrame X' donde X es un producto que NO ha sido mencionado o mostrado previamente, debe clasificarse como QUERY (consulta nueva), no como CONFIRMATION.";
@@ -73,6 +95,8 @@ async function analyzeIntent(message, context = {}) {
     systemMessage += "\n- 'Me interesan las tijeras' (cuando no se han mostrado) = QUERY";
     systemMessage += "\n- 'Sí, quiero las tijeras' (después de mostrar tijeras) = CONFIRMATION";
     systemMessage += "\n- 'Me interesa el primer producto' = CONFIRMATION";
+    systemMessage += "\n- 'carro de la compra' = VIEW_CART";
+    systemMessage += "\n- 'carrito' = VIEW_CART";
     
     // Añadir contexto si está disponible
     if (context.lastQuery) {
@@ -122,7 +146,7 @@ async function analyzeIntent(message, context = {}) {
             properties: {
               intent: {
                 type: "string",
-                enum: ["CONFIRMATION", "QUANTITY", "QUERY", "REJECTION", "GREETING", "FAREWELL", "VIEW_CART", "REMOVE_FROM_CART", "CLEAR_CART", "OTHER"],
+                enum: ["CONFIRMATION", "QUANTITY", "QUERY", "REJECTION", "GREETING", "FAREWELL", "VIEW_CART", "REMOVE_FROM_CART", "CLEAR_CART", "ADD_UNITS", "ADD_MORE", "OTHER"],
                 description: "La intención detectada en el mensaje del usuario"
               },
               confidence: {
