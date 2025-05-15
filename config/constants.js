@@ -18,5 +18,7 @@ module.exports = {
     CONFIRMING_CHECKOUT: 'confirming_checkout',
     CHECKOUT_COMPLETED: 'checkout_completed',
     VIEW_CART: 'view_cart',
+    ADDING_UNITS: 'adding_units',
+    ASKING_ADD_QUANTITY: 'asking_add_quantity',
   }
 };
