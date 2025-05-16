@@ -1,4 +1,5 @@
 // Controlador principal para el manejo del carrito, refactorizado para usar módulos
+
 const cartModules = require('./cart');
 
 /**
