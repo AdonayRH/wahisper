@@ -1,5 +1,3 @@
-// Este es el código corregido para botController.js
-
 // Este módulo gestiona el carrito de compras en memoria para un bot de Telegram.
 const bot = require("../services/telegramService");
 const carritoService = require("../services/carritoService");
@@ -10,6 +8,7 @@ const productController = require("./productController");
 const conversationController = require("./conversationController");
 const adminController = require("./adminController");
 const checkoutController = require("./checkoutController");
+const whisperService = require('../services/whisperService');
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -62,7 +61,171 @@ function extractSecondaryActions(text) {
   };
 }
 
-
+// Handler for voice messages
+bot.on('voice', async (msg) => {
+  try {
+    const chatId = msg.chat.id;
+    const voiceFileId = msg.voice.file_id;
+    
+    // Initialize context if it doesn't exist
+    stateService.initContext(chatId);
+    
+    // Process user data
+    conversationController.processUserData(msg, carritoService);
+    
+    // Update activity timestamp
+    stateService.updateActivity(chatId);
+    
+    // Send "typing..." indicator
+    bot.sendChatAction(chatId, 'typing');
+    
+    // Send a message to let the user know we're processing their audio
+    const processingMsg = await bot.sendMessage(
+      chatId, 
+      "🎤 Procesando tu mensaje de voz..."
+    );
+    
+    // Process the voice message using Whisper
+    const transcription = await whisperService.processVoiceMessage(bot, voiceFileId);
+    
+    // Delete processing message
+    await bot.deleteMessage(chatId, processingMsg.message_id)
+      .catch(err => console.error("Error al eliminar mensaje de procesamiento:", err));
+    
+    if (!transcription || transcription.trim() === '') {
+      return bot.sendMessage(
+        chatId,
+        "❌ Lo siento, no pude entender tu mensaje de voz. ¿Podrías intentarlo de nuevo o enviar un mensaje de texto?"
+      );
+    }
+    
+    // Show transcription to user
+    await bot.sendMessage(
+      chatId,
+      `🔊 Mensaje de voz: "${transcription}"`,
+      { parse_mode: 'Markdown' }
+    );
+    
+    // Process the transcribed text like a regular message
+    // Get current context
+    const context = stateService.getContext(chatId);
+    const intentContext = {
+      lastQuery: context.lastQuery,
+      lastMentionedProducts: context.lastProductsShown,
+      currentState: context.state
+    };
+    
+    // Analyze intent
+    const intentAnalysis = await analyzeIntent(transcription, intentContext);
+    console.log(`Intención detectada en audio: ${intentAnalysis.intent} (${intentAnalysis.confidence})`);
+    
+    // Handle the message based on the current state and intent
+    // This is basically the same logic as in the regular message handler
+    
+    // If ending conversation
+    if (conversationController.isEndingConversation(transcription)) {
+      return conversationController.handleEndConversation(bot, chatId);
+    }
+    
+    // If confidence is low, ask for clarification
+    if (intentAnalysis.confidence < 0.6) {
+      return bot.sendMessage(
+        chatId,
+        "No estoy seguro de entender lo que quieres. ¿Podrías ser más específico?"
+      );
+    }
+    
+    // Process based on current state
+    // This is simplified - in a full implementation, you'd include all the state handling logic
+    // from the regular message handler
+    switch (context.state) {
+      case stateService.STATES.ASKING_QUANTITY:
+        // If we can extract a number from the transcription
+        const numberMatch = transcription.match(/\d+/);
+        if (numberMatch) {
+          return productController.handleQuantitySelection(
+            bot, 
+            chatId, 
+            context.selectedArticleIndex, 
+            parseInt(numberMatch[0])
+          );
+        }
+        
+        // Or if intent analysis found a quantity
+        if (intentAnalysis.intent === "QUANTITY" && 
+            intentAnalysis.quantityMentioned && 
+            intentAnalysis.quantityMentioned > 0) {
+          
+          return productController.handleQuantitySelection(
+            bot, 
+            chatId, 
+            context.selectedArticleIndex, 
+            intentAnalysis.quantityMentioned
+          );
+        }
+        
+        // If no quantity found, ask again
+        return bot.sendMessage(
+          chatId,
+          "Por favor, indica un número para la cantidad:"
+        );
+        
+      // Add additional state handling as needed
+      default:
+        // Process based on intent
+        switch (intentAnalysis.intent) {
+          case "VIEW_CART":
+            return cartController.handleCartCommand(bot, chatId);
+          
+          case "CHECKOUT":
+            return checkoutController.handleCheckout(bot, chatId);
+            
+          case "REMOVE_FROM_CART":
+            if (intentAnalysis.productReference) {
+              return cartController.handleStartRemoveItem(bot, chatId, intentAnalysis.productReference);
+            } else {
+              await cartController.handleCartCommand(bot, chatId);
+              return bot.sendMessage(
+                chatId,
+                "¿Qué producto deseas eliminar? Puedes indicar su número o nombre."
+              );
+            }
+          
+          case "GREETING":
+            bot.sendMessage(
+              chatId,
+              "¡Hola! ¿En qué puedo ayudarte hoy? Puedo mostrarte nuestros productos o responder a tus consultas."
+            );
+            break;
+            
+          case "FAREWELL":
+            conversationController.handleEndConversation(bot, chatId);
+            break;
+            
+          case "QUERY":
+          default:
+            // For product queries or unclassified messages
+            return productController.handleProductSearch(bot, chatId, transcription);
+        }
+    }
+    
+  } catch (error) {
+    console.error("Error processing voice message:", error);
+    
+    try {
+      const chatId = msg.chat.id;
+      bot.sendMessage(
+        chatId,
+        "Ha ocurrido un error al procesar tu mensaje de voz. Por favor, intenta de nuevo o escribe un mensaje de texto."
+      );
+      
+      // Reset state to initial
+      stateService.setState(chatId, stateService.STATES.INITIAL);
+    } catch (sendError) {
+      console.error("Error sending error message:", sendError);
+    }
+  }
+});
 
 
 // Configurar intervalos de limpieza de contextos
