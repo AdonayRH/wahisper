@@ -1,5 +1,3 @@
-// Actualización a productController.js para verificar stock
-
 const { buscarArticulosSimilares } = require('./aiController');
 const { generarRespuestaComoVendedor } = require('../services/generarRespuestaComoVendedor');
 const stateService = require('../services/botStateService');
