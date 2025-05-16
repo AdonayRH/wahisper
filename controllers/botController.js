@@ -82,7 +82,7 @@ bot.on('voice', async (msg) => {
     // Send a message to let the user know we're processing their audio
     const processingMsg = await bot.sendMessage(
       chatId, 
-      "🎤 Procesando tu mensaje de voz..."
+      "Procesando tu mensaje de voz..."
     );
     
     // Process the voice message using Whisper
@@ -673,7 +673,7 @@ bot.on("message", async (msg) => {
         // Despedirse
         conversationController.handleEndConversation(bot, chatId);
         break;
-        
+      
       case "REJECTION":
         // Manejar rechazo según el estado actual
         if (context.state === stateService.STATES.ASKING_FOR_MORE) {
@@ -686,7 +686,7 @@ bot.on("message", async (msg) => {
           stateService.setState(chatId, stateService.STATES.ASKING_FOR_MORE);
         }
         break;
-        
+      
       case "CONFIRMATION":
         // Manejar confirmación según el estado actual
         if (context.state === stateService.STATES.SHOWING_PRODUCTS) {
@@ -1018,5 +1018,5 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('Promesa rechazada no manejada:', reason);
   // Aquí puedes añadir lógica para recuperarte del error si es posible
 });
-
+// Exportamos el NLU
 module.exports = bot;
