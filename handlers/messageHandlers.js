@@ -6,6 +6,8 @@ const conversationController = require('../controllers/conversationController');
 const stateHandlers = require('./stateHandlers');
 const intentHandlers = require('./intentHandlers');
 const errorHandlers = require('./errorHandlers');
+const adminController = require('../controllers/adminController');
+const carritoService = require('../services/carritoService');
 const logger = require('../utils/logger');
 
 /**
@@ -26,7 +28,6 @@ async function processUserMessage(bot, msg) {
     stateService.initContext(chatId);
     
     // Procesar datos del usuario
-    const carritoService = require('../services/carritoService');
     conversationController.processUserData(msg, carritoService);
     
     // Actualizar actividad
@@ -59,6 +60,12 @@ async function processUserMessage(bot, msg) {
     // Analizar la intención del mensaje
     const intentAnalysis = await analyzeIntent(text, intentContext);
     logger.log(`Intención detectada: ${intentAnalysis.intent} (${intentAnalysis.confidence})`);
+    
+    // ===== NUEVO: Manejar solicitudes de administrador =====
+    if (intentAnalysis.intent === "ADMIN_REQUEST") {
+      logger.log(`Detectada solicitud de admin para usuario ${chatId}`);
+      return adminController.requestsController.handleAdminRequest(bot, msg);
+    }
     
     // Si la confianza es baja, solicitar clarificación
     if (intentAnalysis.confidence < 0.6) {

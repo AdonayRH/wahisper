@@ -1,11 +1,10 @@
-// Maneja los callbacks de botones
-
 const adminController = require('../controllers/adminController');
 const cartController = require('../controllers/cartController');
 const productController = require('../controllers/productController');
 const conversationController = require('../controllers/conversationController');
 const checkoutController = require('../controllers/checkoutController');
 const stateService = require('../services/botStateService');
+const adminService = require('../services/adminService');
 const errorHandlers = require('./errorHandlers');
 const logger = require('../utils/logger');
 
@@ -29,18 +28,44 @@ async function processCallbackQuery(bot, callbackQuery) {
     stateService.updateActivity(chatId);
     
     // Responder al callback para quitar el "reloj" del botón
-    bot.answerCallbackQuery(callbackQuery.id);
+    await bot.answerCallbackQuery(callbackQuery.id);
     
     logger.log(`Callback recibido: ${data} de usuario ${chatId}`);
+
+    // ===================================================
+    // PUNTO CRÍTICO: VERIFICACIÓN Y MANEJO DE ADMIN
+    // ===================================================
     
-    // Agrupar callbacks por categorías para mejor manejo
+    // 1. PRIMERO verificamos si es un callback relacionado con administración
     if (data.startsWith('admin_')) {
-      await handleAdminCallbacks(bot, chatId, data);
+      // 2. VERIFICAR si el usuario es administrador
+      const isUserAdmin = await adminService.isAdmin(chatId.toString());
+      
+      // 3a. Si NO es admin y está intentando usar funciones de admin, bloqueamos
+      if (!isUserAdmin) {
+        await bot.sendMessage(
+          chatId,
+          "⛔ No tienes permisos para acceder a las funciones de administrador."
+        );
+        return; // Terminamos el procesamiento aquí
+      }
+      
+      // 3b. Si ES admin, procesamos el callback de administración
+      const wasProcessed = await adminController.processAdminCallbacks(bot, callbackQuery);
+      
+      // Si el callback ya fue procesado por el controlador de admin, terminamos
+      if (wasProcessed) {
+        return;
+      }
     }
-    else if (data.startsWith('save_inventory_') || data === 'cancel_inventory') {
-      await handleInventoryCallbacks(bot, chatId, messageId, data);
-    }
-    else if (data.startsWith('remove_qty_') || data === 'confirm_remove' || data === 'cancel_remove') {
+    
+    // ===================================================
+    // PROCESAMIENTO NORMAL PARA TODOS LOS USUARIOS
+    // ===================================================
+    
+    // A partir de aquí, procesamos callbacks disponibles para todos los usuarios
+    // Agrupar callbacks por categorías para mejor manejo
+    if (data.startsWith('remove_qty_') || data === 'confirm_remove' || data === 'cancel_remove') {
       await handleRemoveCallbacks(bot, chatId, data);
     }
     else if (data === 'confirm_clear_cart' || data === 'cancel_clear_cart') {
@@ -77,18 +102,23 @@ async function processCallbackQuery(bot, callbackQuery) {
 
 /**
  * Maneja callbacks relacionados con la administración
+ * Este método solo debe llamarse después de verificar que el usuario es admin
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @param {string} data - Datos del callback
  */
 async function handleAdminCallbacks(bot, chatId, data) {
+  // Como ya verificamos los permisos en processCallbackQuery, podemos proceder
   if (data === 'admin_inventory') {
     adminController.handleInventoryManagement(bot, chatId);
   }
   else if (data === 'admin_upload_inventory') {
     adminController.handleUploadInventory(bot, chatId);
   }
-  // Se pueden añadir más callbacks administrativos aquí
+  else if (data === 'admin_user_management') {
+    adminController.handleUserManagement(bot, chatId);
+  }
+  // Otros callbacks específicos de admin...
 }
 
 /**
@@ -99,6 +129,11 @@ async function handleAdminCallbacks(bot, chatId, data) {
  * @param {string} data - Datos del callback
  */
 async function handleInventoryCallbacks(bot, chatId, messageId, data) {
+  // Verificar nuevamente si es administrador por seguridad
+  if (!await adminService.isAdmin(chatId.toString())) {
+    return bot.sendMessage(chatId, "No tienes permisos para acceder a esta función.");
+  }
+  
   if (data.startsWith('save_inventory_')) {
     const fileName = data.replace('save_inventory_', '');
     const fileProcessingService = require('../services/fileProcessingService');
