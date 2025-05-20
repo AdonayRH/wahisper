@@ -189,8 +189,24 @@ function generateAdminButtons() {
     reply_markup: {
       inline_keyboard: [
         [{ text: "📊 Gestión de Inventario", callback_data: "admin_inventory" }],
+        [{ text: "👥 Gestión de Usuarios", callback_data: "admin_user_management" }],
         [{ text: "📈 Estadísticas", callback_data: "admin_stats" }],
-        [{ text: "⚙️ Configuración", callback_data: "admin_config" }]
+      ]
+    }
+  };
+}
+
+/**
+ * Genera botones para gestión de administradores
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateAdminManagementButtons() {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📋 Ver solicitudes pendientes", callback_data: "admin_pending_requests" }],
+        [{ text: "👥 Ver administradores", callback_data: "admin_list" }],
+        [{ text: "⬅️ Volver al panel principal", callback_data: "admin_back" }]
       ]
     }
   };
@@ -239,7 +255,10 @@ module.exports = {
   generateEmptyCartButtons,
   generateCheckoutButtons,
   generatePostCheckoutButtons,
+
+  // Funciones para administradores
   generateAdminButtons,
+  generateAdminManagementButtons,
   generateInventoryButtons,
   generateInventoryConfirmButtons
 };

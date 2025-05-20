@@ -292,6 +292,10 @@ async function handleStateBasedAction(bot, chatId, text, intentAnalysis) {
 
     case STATES.REMOVING_ITEM:
       return handleRemovingItemState(bot, chatId, text);
+      
+    // Añadir el nuevo caso para manejar la confirmación del checkout
+    case STATES.CONFIRMING_CHECKOUT:
+      return handleConfirmingCheckoutState(bot, chatId, text, intentAnalysis);
 
     case STATES.ASKING_FOR_MORE:
       // Si el usuario quiere seguir comprando, resetear al estado inicial
@@ -311,6 +315,73 @@ async function handleStateBasedAction(bot, chatId, text, intentAnalysis) {
       return null; // Indica que no se manejó ningún estado específico
   }
 }
+
+
+/**
+ * Maneja el estado CONFIRMING_CHECKOUT
+ * @param {object} bot - Instancia del bot de Telegram
+ * @param {number} chatId - ID del chat
+ * @param {string} text - Texto del mensaje
+ * @param {object} intentAnalysis - Resultado del análisis de intención
+ * @returns {Promise} - Promesa con la respuesta
+ */
+async function handleConfirmingCheckoutState(bot, chatId, text, intentAnalysis) {
+  try {
+    // Patrones de confirmación
+    const confirmPatterns = [
+      /^(s[iíì]|yes|confirmar|confirmo|claro|adelante|ok|aceptar|acepto)$/i,
+      /^(confirmar|tramitar|finalizar)\s+(pedido|compra|carrito)$/i,
+      /^quiero\s+(confirmar|tramitar|finalizar)(\s+mi|\s+el)?\s+(pedido|compra|carrito)$/i,
+      /^estoy\s+de\s+acuerdo$/i,
+      /^adelante$/i
+    ];
+    
+    // Patrones de cancelación
+    const cancelPatterns = [
+      /^(no|nop|cancel|cancelar|cancelo)$/i,
+      /^no\s+(quiero|deseo)\s+(confirmar|tramitar|finalizar)$/i,
+      /^mejor\s+no$/i
+    ];
+    
+    // Patrones para modificar el carrito
+    const modifyCartPatterns = [
+      /^(modificar|cambiar|editar|ajustar)\s+(carrito|pedido|compra)$/i,
+      /^quiero\s+(modificar|cambiar|editar|ajustar)(\s+mi|\s+el)?\s+(carrito|pedido|compra)$/i,
+      /^volver\s+al\s+carrito$/i
+    ];
+    
+    // Verificar patrones o intención
+    if (confirmPatterns.some(pattern => pattern.test(text)) || 
+        (intentAnalysis && intentAnalysis.intent === "CONFIRMATION")) {
+      const checkoutController = require('../controllers/checkoutController');
+      return checkoutController.handleConfirmCheckout(bot, chatId);
+    } 
+    else if (cancelPatterns.some(pattern => pattern.test(text)) || 
+             (intentAnalysis && intentAnalysis.intent === "REJECTION")) {
+      const checkoutController = require('../controllers/checkoutController');
+      return checkoutController.handleCancelCheckout(bot, chatId);
+    }
+    else if (modifyCartPatterns.some(pattern => pattern.test(text)) || 
+             text.toLowerCase().includes('carrito')) {
+      // Redirigir al carrito
+      const cartController = require('../controllers/cartController');
+      return cartController.handleCartCommand(bot, chatId);
+    }
+    
+    // Si no se reconoce la intención, pedir clarificación
+    return bot.sendMessage(
+      chatId,
+      "Por favor, confirma si deseas tramitar el pedido o si prefieres cancelar."
+    );
+  } catch (error) {
+    logger.error(`Error al manejar confirmación de checkout: ${error.message}`);
+    return bot.sendMessage(
+      chatId,
+      "Hubo un error al procesar tu respuesta. Por favor, intenta de nuevo o usa los botones proporcionados."
+    );
+  }
+}
+
 
 /**
  * Verifica si estamos en un estado especial que debe manejarse sin análisis de intención
@@ -352,6 +423,7 @@ module.exports = {
   handleAskingRemoveQuantityState,
   handleConfirmingRemoveItemState,
   handleConfirmingRemoveAllState,
+  handleConfirmingCheckoutState,
   handleStateBasedAction,
   handleSpecialState
 };

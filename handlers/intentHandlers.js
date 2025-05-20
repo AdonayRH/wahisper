@@ -1,5 +1,3 @@
-// Maneja las acciones basadas en la intención detectada
-
 const productController = require('../controllers/productController');
 const cartController = require('../controllers/cartController');
 const conversationController = require('../controllers/conversationController');
@@ -384,6 +382,13 @@ async function handleQueryIntent(bot, chatId, text) {
  */
 async function handleIntentBasedAction(bot, chatId, text, context, intentAnalysis) {
   switch (intentAnalysis.intent) {
+
+    case "ADMIN_REQUEST":
+    // Esta intención ya se maneja en messageHandlers.js antes de llegar aquí
+    // Pero por si acaso, redirigimos
+    const adminController = require('../controllers/adminController');
+    return adminController.requestsController.handleAdminRequest(bot, { chat: { id: chatId }, from: context.userData, text });
+    
     case "VIEW_CART":
       return handleViewCartIntent(bot, chatId);
     
