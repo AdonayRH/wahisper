@@ -246,6 +246,43 @@ function generateInventoryConfirmButtons(fileName) {
   };
 }
 
+/**
+ * Genera botones para el panel de estadísticas
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateStatsButtons() {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📋 Resumen General", callback_data: "admin_stats_summary" }],
+        [{ text: "🛒 Pedidos Pendientes", callback_data: "admin_stats_pending" }],
+        [{ text: "✅ Pedidos Completados", callback_data: "admin_stats_completed" }],
+        [{ text: "❌ Pedidos Cancelados", callback_data: "admin_stats_canceled" }],
+        [{ text: "📦 Inventario", callback_data: "admin_stats_inventory" }],
+        [{ text: "👥 Usuarios", callback_data: "admin_stats_users" }],
+        [{ text: "📊 Exportar Datos", callback_data: "admin_stats_export" }],
+        [{ text: "⬅️ Volver", callback_data: "admin_back" }]
+      ]
+    }
+  };
+}
+
+/**
+ * Genera botones para navegar entre vistas de estadísticas
+ * @param {string} category - Categoría de estadísticas (summary, pending, etc.)
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateStatsNavigationButtons(category) {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🔄 Actualizar", callback_data: `admin_stats_${category}` }],
+        [{ text: "⬅️ Volver a Estadísticas", callback_data: "admin_stats" }]
+      ]
+    }
+  };
+}
+
 module.exports = {
   generateProductButtons,
   generateQuantityButtons,
@@ -260,5 +297,9 @@ module.exports = {
   generateAdminButtons,
   generateAdminManagementButtons,
   generateInventoryButtons,
-  generateInventoryConfirmButtons
+  generateInventoryConfirmButtons,
+  
+  // Nuevas funciones para estadísticas
+  generateStatsButtons,
+  generateStatsNavigationButtons
 };

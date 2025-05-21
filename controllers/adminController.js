@@ -6,6 +6,7 @@ const buttonService = require('../services/buttonGeneratorService');
 const adminService = require('../services/adminService');
 const requestsController = require('./admin/requestsController');
 const managementController = require('./admin/managementController');
+const statsController = require('./admin/statsController');
 const logger = require('../utils/logger');
 
 /**
@@ -32,6 +33,19 @@ async function handleAdminCommand(bot, msg) {
   
   // Mostrar menú de administrador
   bot.sendMessage(chatId, "Panel de Administración", buttonService.generateAdminButtons());
+}
+
+/**
+ * Maneja la opción de estadísticas
+ * @param {object} bot - Instancia del bot
+ * @param {number} chatId - ID del chat
+*/
+async function handleStats(bot, chatId) {
+  if (!await isAdmin(chatId.toString())) {
+    return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
+  }
+  
+  statsController.showStatsPanel(bot, chatId);
 }
 
 /**
@@ -296,52 +310,80 @@ async function processAdminCallbacks(bot, callbackQuery) {
   }
   
   try {
+    // === User Management ===
     if (data === 'admin_user_management') {
-      // Mostrar gestión de usuarios/admins
       await managementController.showAdminManagementPanel(bot, chatId);
       return true;
     }
     else if (data === 'admin_pending_requests') {
-      // Mostrar solicitudes pendientes
       await managementController.showPendingRequests(bot, chatId);
       return true;
     }
     else if (data === 'admin_list') {
-      // Mostrar lista de administradores
       await managementController.showAdminList(bot, chatId);
       return true;
     }
     else if (data.startsWith('admin_request_')) {
-      // Mostrar detalles de solicitud
       const requestId = data.replace('admin_request_', '');
       await managementController.showRequestDetails(bot, chatId, requestId);
       return true;
     }
     else if (data.startsWith('admin_approve_')) {
-      // Aprobar solicitud
       const requestId = data.replace('admin_approve_', '');
       await managementController.processRequest(bot, chatId, requestId, 'APPROVE');
       return true;
     }
     else if (data.startsWith('admin_reject_')) {
-      // Rechazar solicitud
       const requestId = data.replace('admin_reject_', '');
       await managementController.processRequest(bot, chatId, requestId, 'REJECT');
       return true;
     }
     else if (data.startsWith('admin_remove_')) {
-      // Eliminar administrador
       const adminId = data.replace('admin_remove_', '');
       await managementController.handleRemoveAdmin(bot, chatId, adminId);
       return true;
     }
+    
+    // === Statistics ===
+    else if (data === 'admin_stats') {
+      await statsController.showStatsPanel(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_summary') {
+      await statsController.showStatsSummary(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_pending') {
+      await statsController.showPendingOrdersStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_completed') {
+      await statsController.showCompletedOrdersStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_canceled') {
+      await statsController.showCanceledOrdersStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_inventory') {
+      await statsController.showInventoryStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_users') {
+      await statsController.showUserStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_export') {
+      await statsController.exportStats(bot, chatId);
+      return true;
+    }
+    
+    // === Navigation ===
     else if (data === 'admin_management') {
-      // Volver al panel de gestión
       await managementController.showAdminManagementPanel(bot, chatId);
       return true;
     }
     else if (data === 'admin_back') {
-      // Volver al panel principal
       await bot.sendMessage(chatId, "Panel de Administración", buttonService.generateAdminButtons());
       return true;
     }
@@ -363,6 +405,7 @@ async function processAdminCallbacks(bot, callbackQuery) {
 module.exports = {
   isAdmin,
   handleAdminCommand,
+  handleStats,
   handleInventoryManagement,
   handleUserManagement,
   handleUploadInventory,
@@ -370,5 +413,6 @@ module.exports = {
   handleSaveInventory,
   handleCancelInventory,
   processAdminCallbacks,
-  requestsController
+  requestsController,
+  statsController
 };
