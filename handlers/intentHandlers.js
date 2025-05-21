@@ -426,6 +426,66 @@ async function handleIntentBasedAction(bot, chatId, text, context, intentAnalysi
   }
 }
 
+
+/**
+ * Maneja la selección de productos por número o texto
+ * @param {object} bot - Instancia del bot de Telegram
+ * @param {number} chatId - ID del chat
+ * @param {string} text - Texto del mensaje
+ * @param {object} context - Contexto de la conversación
+ * @returns {Promise} - Promesa con la respuesta
+ */
+async function handleProductSelection(bot, chatId, text, context) {
+  if (!context.lastMentionedArticles || context.lastMentionedArticles.length === 0) {
+    return bot.sendMessage(chatId, "No hay productos disponibles para seleccionar.");
+  }
+
+  let selectedIndex = -1;
+  const totalProducts = context.lastMentionedArticles.length;
+
+  // Intentar detectar números directos (1, 2, 3, etc.)
+  const numberMatch = text.match(/\b(\d+)\b/);
+  if (numberMatch) {
+    const number = parseInt(numberMatch[1]);
+    if (number >= 1 && number <= totalProducts) {
+      selectedIndex = number - 1; // Convertir a índice base-0
+    }
+  }
+
+  // Si no se encontró número, buscar palabras ordinales
+  if (selectedIndex === -1) {
+    const ordinalPatterns = {
+      'primer': 0, 'primero': 0, 'primera': 0, '1er': 0, '1°': 0,
+      'segundo': 1, 'segunda': 1, '2do': 1, '2°': 1,
+      'tercer': 2, 'tercero': 2, 'tercera': 2, '3er': 2, '3°': 2,
+      'cuarto': 3, 'cuarta': 3, '4to': 3, '4°': 3,
+      'quinto': 4, 'quinta': 4, '5to': 4, '5°': 4,
+      'último': totalProducts - 1, 'ultima': totalProducts - 1
+    };
+
+    const lowerText = text.toLowerCase();
+    for (const [word, index] of Object.entries(ordinalPatterns)) {
+      if (lowerText.includes(word) && index < totalProducts) {
+        selectedIndex = index;
+        break;
+      }
+    }
+  }
+
+  // Si encontramos una selección válida
+  if (selectedIndex >= 0 && selectedIndex < totalProducts) {
+    const productController = require('../controllers/productController');
+    return productController.handleProductSelection(bot, chatId, selectedIndex);
+  }
+
+  // Si no se pudo determinar la selección
+  return bot.sendMessage(
+    chatId,
+    `Disculpa no te he entendido, podrías indica el número (1-${totalProducts}).`
+  );
+}
+
+
 module.exports = {
   handleViewCartIntent,
   handleAddUnitsIntent,
@@ -441,5 +501,8 @@ module.exports = {
   handleQueryIntent,
   handleIntentBasedAction,
   isCheckoutCommand,
-  extractSecondaryActions
+  extractSecondaryActions,
+
+  // Función para manejar la selección de productos por número o texto
+  handleProductSelection
 };
