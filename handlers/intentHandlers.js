@@ -8,9 +8,12 @@ const carritoService = require('../services/carritoService');
 const stateService = require('../services/botStateService');
 const buttonGeneratorService = require('../services/buttonGeneratorService');
 const logger = require('../utils/logger');
+const { OpenAI } = require("openai");
 
 const STATES = stateService.STATES;
-
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // asegúrate de tener esta clave en tu .env
+});
 /**
  * Verifica si el mensaje del usuario indica una intención de checkout
  * @param {string} text - Texto del mensaje
@@ -171,12 +174,32 @@ async function handleClearCartIntent(bot, chatId) {
  * @returns {Promise} - Promesa con la respuesta
  */
 async function handleGreetingIntent(bot, chatId) {
-  return bot.sendMessage(
-    chatId,
-    "¡Hola! ¿En qué puedo ayudarte hoy? Puedo mostrarte nuestros productos o responder a tus consultas."
-  );
-}
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4", // o "gpt-3.5-turbo" si prefieres menor coste
+      messages: [
+        {
+          role: "system",
+          content: "Hablas como una persona real que trabaja en una tienda online. Saluda de forma natural, cercana y humana, sin mencionar que eres un asistente o inteligencia artificial."
+        },
+        {
+          role: "user",
+          content: "Acaba de iniciar el chat un nuevo cliente. ¿Cómo lo saludarías?"
+        }
+      ],
+      temperature: 1 // más alto = más creativo
+    });
 
+    const respuesta = completion.choices[0].message.content;
+    return bot.sendMessage(chatId, respuesta);
+  } catch (error) {
+    console.error("❌ Error al generar saludo con OpenAI:", error);
+    return bot.sendMessage(
+      chatId,
+      "¡Hola! ¿En qué puedo ayudarte hoy? 😊"
+    );
+  }
+}
 /**
  * Maneja la intención FAREWELL
  * @param {object} bot - Instancia del bot de Telegram

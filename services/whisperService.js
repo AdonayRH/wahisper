@@ -60,7 +60,7 @@ async function processVoiceMessage(bot, fileId) {
     
     // Get file info from Telegram
     const fileInfo = await bot.getFile(fileId);
-    const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`;
+    const fileUrl = `http://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`;
     
     // Download the file
     const response = await axios({

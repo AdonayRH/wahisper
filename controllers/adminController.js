@@ -99,7 +99,7 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
   try {
     // Obtener url del archivo
     const fileInfo = await bot.getFile(fileId);
-    const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`;
+    const fileUrl = `http://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`;
     
     // Crear directorio de uploads si no existe
     const uploadDir = path.join(__dirname, '../uploads');
