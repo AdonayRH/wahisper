@@ -3,17 +3,19 @@ const path = require('path');
 const axios = require('axios');
 const stateService = require('../services/botStateService');
 const buttonService = require('../services/buttonGeneratorService');
-
-// Lista de IDs de usuarios administradores
-const ADMIN_IDS = process.env.ADMIN_TELEGRAM_IDS ? process.env.ADMIN_TELEGRAM_IDS.split(',') : ['2030605308'];;
+const adminService = require('../services/adminService');
+const requestsController = require('./admin/requestsController');
+const managementController = require('./admin/managementController');
+const statsController = require('./admin/statsController');
+const logger = require('../utils/logger');
 
 /**
  * Verifica si un usuario es administrador
  * @param {string} telegramId - ID de Telegram
- * @returns {boolean} - Indica si es administrador
+ * @returns {Promise<boolean>} - Indica si es administrador
 */
-function isAdmin(telegramId) {
-  return ADMIN_IDS.includes(telegramId.toString());
+async function isAdmin(telegramId) {
+  return adminService.isAdmin(telegramId.toString());
 }
 
 /**
@@ -21,11 +23,11 @@ function isAdmin(telegramId) {
  * @param {object} bot - Instancia del bot
  * @param {object} msg - Mensaje de Telegram
 */
-function handleAdminCommand(bot, msg) {
+async function handleAdminCommand(bot, msg) {
   const chatId = msg.chat.id;
   
   // Verificar si es un administrador
-  if (!isAdmin(chatId.toString())) {
+  if (!await isAdmin(chatId.toString())) {
     return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
   }
   
@@ -34,12 +36,25 @@ function handleAdminCommand(bot, msg) {
 }
 
 /**
+ * Maneja la opción de estadísticas
+ * @param {object} bot - Instancia del bot
+ * @param {number} chatId - ID del chat
+*/
+async function handleStats(bot, chatId) {
+  if (!await isAdmin(chatId.toString())) {
+    return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
+  }
+  
+  statsController.showStatsPanel(bot, chatId);
+}
+
+/**
  * Maneja la opción de gestión de inventario
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
 */
-function handleInventoryManagement(bot, chatId) {
-  if (!isAdmin(chatId.toString())) {
+async function handleInventoryManagement(bot, chatId) {
+  if (!await isAdmin(chatId.toString())) {
     return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
   }
   
@@ -47,12 +62,25 @@ function handleInventoryManagement(bot, chatId) {
 }
 
 /**
+ * Maneja la opción de gestión de usuarios y administradores
+ * @param {object} bot - Instancia del bot
+ * @param {number} chatId - ID del chat
+*/
+async function handleUserManagement(bot, chatId) {
+  if (!await isAdmin(chatId.toString())) {
+    return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
+  }
+  
+  managementController.showAdminManagementPanel(bot, chatId);
+}
+
+/**
  * Prepara para subir inventario
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
 */
-function handleUploadInventory(bot, chatId) {
-  if (!isAdmin(chatId.toString())) {
+async function handleUploadInventory(bot, chatId) {
+  if (!await isAdmin(chatId.toString())) {
     return bot.sendMessage(chatId, "No tienes permisos para acceder a las funciones de administrador.");
   }
   
@@ -78,7 +106,7 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
   const fileName = msg.document.file_name;
   
   // Verificar si estamos esperando un archivo y si es admin
-  if (!isAdmin(chatId.toString()) || 
+  if (!await isAdmin(chatId.toString()) || 
       stateService.getContext(chatId).state !== 'waiting_for_file') {
     return;
   }
@@ -184,7 +212,7 @@ async function handleSaveInventory(bot, chatId, messageId, fileName, fileProcess
   const filePath = path.join(__dirname, '../uploads', fileName);
   
   // Verificar si es admin y si el archivo existe
-  if (!isAdmin(chatId.toString()) || !fs.existsSync(filePath)) {
+  if (!await isAdmin(chatId.toString()) || !fs.existsSync(filePath)) {
     return bot.sendMessage(chatId, "No se puede procesar esta solicitud");
   }
   
@@ -261,12 +289,130 @@ async function handleCancelInventory(bot, chatId, messageId) {
   stateService.setContextValue(chatId, 'pendingFile', undefined);
 }
 
+/**
+ * Procesa los callbacks relacionados con la gestión de administradores
+ * @param {object} bot - Instancia del bot
+ * @param {object} callbackQuery - Objeto de callback de Telegram
+ * @returns {Promise<boolean>} - Indica si el callback fue procesado
+ */
+async function processAdminCallbacks(bot, callbackQuery) {
+  const chatId = callbackQuery.message.chat.id;
+  const messageId = callbackQuery.message.message_id;
+  const data = callbackQuery.data;
+  
+  // Verificar si es administrador
+  if (!await isAdmin(chatId.toString())) {
+    await bot.answerCallbackQuery(callbackQuery.id, {
+      text: "No tienes permisos para usar esta función",
+      show_alert: true
+    });
+    return false;
+  }
+  
+  try {
+    // === User Management ===
+    if (data === 'admin_user_management') {
+      await managementController.showAdminManagementPanel(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_pending_requests') {
+      await managementController.showPendingRequests(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_list') {
+      await managementController.showAdminList(bot, chatId);
+      return true;
+    }
+    else if (data.startsWith('admin_request_')) {
+      const requestId = data.replace('admin_request_', '');
+      await managementController.showRequestDetails(bot, chatId, requestId);
+      return true;
+    }
+    else if (data.startsWith('admin_approve_')) {
+      const requestId = data.replace('admin_approve_', '');
+      await managementController.processRequest(bot, chatId, requestId, 'APPROVE');
+      return true;
+    }
+    else if (data.startsWith('admin_reject_')) {
+      const requestId = data.replace('admin_reject_', '');
+      await managementController.processRequest(bot, chatId, requestId, 'REJECT');
+      return true;
+    }
+    else if (data.startsWith('admin_remove_')) {
+      const adminId = data.replace('admin_remove_', '');
+      await managementController.handleRemoveAdmin(bot, chatId, adminId);
+      return true;
+    }
+    
+    // === Statistics ===
+    else if (data === 'admin_stats') {
+      await statsController.showStatsPanel(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_summary') {
+      await statsController.showStatsSummary(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_pending') {
+      await statsController.showPendingOrdersStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_completed') {
+      await statsController.showCompletedOrdersStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_canceled') {
+      await statsController.showCanceledOrdersStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_inventory') {
+      await statsController.showInventoryStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_users') {
+      await statsController.showUserStats(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_stats_export') {
+      await statsController.exportStats(bot, chatId);
+      return true;
+    }
+    
+    // === Navigation ===
+    else if (data === 'admin_management') {
+      await managementController.showAdminManagementPanel(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_back') {
+      await bot.sendMessage(chatId, "Panel de Administración", buttonService.generateAdminButtons());
+      return true;
+    }
+    
+    // No se procesó el callback
+    return false;
+  } catch (error) {
+    logger.error(`Error al procesar callback de admin ${data}: ${error.message}`);
+    
+    await bot.sendMessage(
+      chatId,
+      "Ha ocurrido un error al procesar la operación. Por favor, intenta de nuevo."
+    );
+    
+    return true;
+  }
+}
+
 module.exports = {
   isAdmin,
   handleAdminCommand,
+  handleStats,
   handleInventoryManagement,
+  handleUserManagement,
   handleUploadInventory,
   processAdminDocument,
   handleSaveInventory,
-  handleCancelInventory
+  handleCancelInventory,
+  processAdminCallbacks,
+  requestsController,
+  statsController
 };

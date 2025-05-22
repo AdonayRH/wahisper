@@ -189,8 +189,24 @@ function generateAdminButtons() {
     reply_markup: {
       inline_keyboard: [
         [{ text: "📊 Gestión de Inventario", callback_data: "admin_inventory" }],
+        [{ text: "👥 Gestión de Usuarios", callback_data: "admin_user_management" }],
         [{ text: "📈 Estadísticas", callback_data: "admin_stats" }],
-        [{ text: "⚙️ Configuración", callback_data: "admin_config" }]
+      ]
+    }
+  };
+}
+
+/**
+ * Genera botones para gestión de administradores
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateAdminManagementButtons() {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📋 Ver solicitudes pendientes", callback_data: "admin_pending_requests" }],
+        [{ text: "👥 Ver administradores", callback_data: "admin_list" }],
+        [{ text: "⬅️ Volver al panel principal", callback_data: "admin_back" }]
       ]
     }
   };
@@ -230,6 +246,43 @@ function generateInventoryConfirmButtons(fileName) {
   };
 }
 
+/**
+ * Genera botones para el panel de estadísticas
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateStatsButtons() {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📋 Resumen General", callback_data: "admin_stats_summary" }],
+        [{ text: "🛒 Pedidos Pendientes", callback_data: "admin_stats_pending" }],
+        [{ text: "✅ Pedidos Completados", callback_data: "admin_stats_completed" }],
+        [{ text: "❌ Pedidos Cancelados", callback_data: "admin_stats_canceled" }],
+        [{ text: "📦 Inventario", callback_data: "admin_stats_inventory" }],
+        [{ text: "👥 Usuarios", callback_data: "admin_stats_users" }],
+        [{ text: "📊 Exportar Datos", callback_data: "admin_stats_export" }],
+        [{ text: "⬅️ Volver", callback_data: "admin_back" }]
+      ]
+    }
+  };
+}
+
+/**
+ * Genera botones para navegar entre vistas de estadísticas
+ * @param {string} category - Categoría de estadísticas (summary, pending, etc.)
+ * @returns {object} - Objeto con configuración de botones
+ */
+function generateStatsNavigationButtons(category) {
+  return {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🔄 Actualizar", callback_data: `admin_stats_${category}` }],
+        [{ text: "⬅️ Volver a Estadísticas", callback_data: "admin_stats" }]
+      ]
+    }
+  };
+}
+
 module.exports = {
   generateProductButtons,
   generateQuantityButtons,
@@ -239,7 +292,14 @@ module.exports = {
   generateEmptyCartButtons,
   generateCheckoutButtons,
   generatePostCheckoutButtons,
+
+  // Funciones para administradores
   generateAdminButtons,
+  generateAdminManagementButtons,
   generateInventoryButtons,
-  generateInventoryConfirmButtons
+  generateInventoryConfirmButtons,
+  
+  // Nuevas funciones para estadísticas
+  generateStatsButtons,
+  generateStatsNavigationButtons
 };

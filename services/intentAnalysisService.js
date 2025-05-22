@@ -12,6 +12,31 @@ const openai = new OpenAI({
  */
 async function analyzeIntent(message, context = {}) {
   try {
+    // Verificar si el mensaje es válido sin necesidad de llamar a OpenAI
+    // lo que agiliza el proceso
+    const adminRequestPatterns = [
+      /quiero\s+(ser)?\s+admin(istrador)?/i,
+      /solicito\s+(ser)?\s+admin(istrador)?/i,
+      /deseo\s+(ser)?\s+admin(istrador)?/i,
+      /admin\s+request/i,
+      /solicitud\s+de\s+admin(istrador)?/i,
+      /pedir\s+admin/i,
+      /obtener\s+admin/i,
+      /convertirme\s+en\s+admin/i,
+      /hacerme\s+admin/i,
+      /dame\s+admin/i,
+      /admin\s+por\s+favor/i
+    ];
+    
+    // Si coincide con algún patrón de solicitud de admin, devolver directamente
+    if (adminRequestPatterns.some(pattern => pattern.test(message))) {
+      return {
+        intent: "ADMIN_REQUEST",
+        confidence: 0.95,
+        input: message
+      };
+    }
+
     // Construir el mensaje del sistema con contexto
     let systemMessage = "Clasifica la intención del usuario en una de estas categorías: ";
     systemMessage += "CONFIRMATION (confirmar interés en comprar un producto), ";
@@ -23,8 +48,29 @@ async function analyzeIntent(message, context = {}) {
     systemMessage += "VIEW_CART (ver o consultar el carrito de compras), ";
     systemMessage += "REMOVE_FROM_CART (eliminar productos del carrito), ";
     systemMessage += "CLEAR_CART (vaciar completamente el carrito), ";
+    systemMessage += "ADMIN_REQUEST (solicitar permisos de administrador), ";
     systemMessage += "OTHER (otro tipo de mensaje).";
 
+    // Añadir ejemplos específicos para ADMIN_REQUEST
+    systemMessage += "\n\nEjemplos para ADMIN_REQUEST:";
+    systemMessage += "\n- 'Quiero ser admin'";
+    systemMessage += "\n- 'Solicito permisos de administrador'";
+    systemMessage += "\n- 'Me gustaría ser administrador'";
+    systemMessage += "\n- 'Necesito acceso de admin'";
+    systemMessage += "\n- 'Dame permisos de administrador'";
+    systemMessage += "\n- 'Ser admin'";
+    systemMessage += "\n- 'Administrador'";
+    systemMessage += "\n- 'Admin'";
+    systemMessage += "\n- 'Quiero admin'";
+
+
+    // Ejemplos para detectar la intención de seleccionar productos
+    systemMessage += "\n\nDetección de selección de productos:";
+    systemMessage += "\n- '1' o 'el primero' = productIndex: 0";
+    systemMessage += "\n- '2' o 'el segundo' = productIndex: 1"; 
+    systemMessage += "\n- '3' o 'el tercero' = productIndex: 2";
+    systemMessage += "\n- 'primer producto' = productIndex: 0";
+    systemMessage += "\n- 'último producto' = productIndex basado en cantidad total";
 
     //Instrucciones específicas para redirijir a FAREWELL (despedida)
     systemMessage += "\n\nCuando el usuario indique que no desea nada más, clasifica como FAREWELL. Esto incluye:";
@@ -146,7 +192,7 @@ async function analyzeIntent(message, context = {}) {
             properties: {
               intent: {
                 type: "string",
-                enum: ["CONFIRMATION", "QUANTITY", "QUERY", "REJECTION", "GREETING", "FAREWELL", "VIEW_CART", "REMOVE_FROM_CART", "CLEAR_CART", "ADD_UNITS", "ADD_MORE", "OTHER"],
+                enum: ["CONFIRMATION", "QUANTITY", "QUERY", "REJECTION", "GREETING", "FAREWELL", "VIEW_CART", "REMOVE_FROM_CART", "CLEAR_CART", "ADD_UNITS", "ADD_MORE", "ADMIN_REQUEST", "OTHER"],
                 description: "La intención detectada en el mensaje del usuario"
               },
               confidence: {
@@ -159,7 +205,7 @@ async function analyzeIntent(message, context = {}) {
               },
                productIndex: {
                 type: "integer",
-                description: "Si el mensaje menciona un índice de producto (número de orden), indica cuál"
+                description: "Índice del producto seleccionado (0-based). Detectar números (1,2,3) o ordinales (primero, segundo, tercero)"
               },
               quantityMentioned: {
                 type: "integer",
