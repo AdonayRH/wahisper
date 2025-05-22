@@ -7,6 +7,7 @@ const stateService = require('../services/botStateService');
 const buttonGeneratorService = require('../services/buttonGeneratorService');
 const logger = require('../utils/logger');
 const { OpenAI } = require("openai");
+const naturalMessageService = require('../services/naturalMessageService');
 
 const STATES = stateService.STATES;
 const openai = new OpenAI({
@@ -169,20 +170,22 @@ async function handleClearCartIntent(bot, chatId) {
  * Maneja la intención GREETING
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
+ * @param {string} text - ID del chat
+
  * @returns {Promise} - Promesa con la respuesta
  */
-async function handleGreetingIntent(bot, chatId) {
+async function handleGreetingIntent(bot, chatId, text) {
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4", // o "gpt-3.5-turbo" si prefieres menor coste
       messages: [
         {
           role: "system",
-          content: "Hablas como una persona real que trabaja en una tienda online. Saluda de forma natural, cercana y humana, sin mencionar que eres un asistente o inteligencia artificial."
+          content: "Eres una persona chill que responde a lo que le dicen, adaptate al usuario y sus modismos usualmente te suelen ser saludar pero si es algo mas igual responde con libertad"
         },
         {
           role: "user",
-          content: "Acaba de iniciar el chat un nuevo cliente. ¿Cómo lo saludarías?"
+          content: text
         }
       ],
       temperature: 1 // más alto = más creativo
@@ -193,8 +196,7 @@ async function handleGreetingIntent(bot, chatId) {
   } catch (error) {
     console.error("❌ Error al generar saludo con OpenAI:", error);
     return bot.sendMessage(
-      chatId,
-      "¡Hola! ¿En qué puedo ayudarte hoy? 😊"
+      chatId, respuesta
     );
   }
 }
@@ -406,7 +408,7 @@ async function handleIntentBasedAction(bot, chatId, text, context, intentAnalysi
       return handleClearCartIntent(bot, chatId);
       
     case "GREETING":
-      return handleGreetingIntent(bot, chatId);
+      return handleGreetingIntent(bot, chatId, text);
       
     case "FAREWELL":
       return handleFarewellIntent(bot, chatId);
@@ -436,23 +438,22 @@ async function handleIntentBasedAction(bot, chatId, text, context, intentAnalysi
  * @returns {Promise} - Promesa con la respuesta
  */
 async function handleProductSelection(bot, chatId, text, context) {
-  if (!context.lastMentionedArticles || context.lastMentionedArticles.length === 0) {
+  const totalProducts = context.lastMentionedArticles?.length || 0;
+
+  if (!totalProducts) {
     return bot.sendMessage(chatId, "No hay productos disponibles para seleccionar.");
   }
 
   let selectedIndex = -1;
-  const totalProducts = context.lastMentionedArticles.length;
 
-  // Intentar detectar números directos (1, 2, 3, etc.)
   const numberMatch = text.match(/\b(\d+)\b/);
   if (numberMatch) {
     const number = parseInt(numberMatch[1]);
     if (number >= 1 && number <= totalProducts) {
-      selectedIndex = number - 1; // Convertir a índice base-0
+      selectedIndex = number - 1;
     }
   }
 
-  // Si no se encontró número, buscar palabras ordinales
   if (selectedIndex === -1) {
     const ordinalPatterns = {
       'primer': 0, 'primero': 0, 'primera': 0, '1er': 0, '1°': 0,
@@ -472,17 +473,17 @@ async function handleProductSelection(bot, chatId, text, context) {
     }
   }
 
-  // Si encontramos una selección válida
   if (selectedIndex >= 0 && selectedIndex < totalProducts) {
     const productController = require('../controllers/productController');
     return productController.handleProductSelection(bot, chatId, selectedIndex);
   }
 
-  // Si no se pudo determinar la selección
-  return bot.sendMessage(
-    chatId,
-    `Disculpa no te he entendido, podrías indica el número (1-${totalProducts}).`
-  );
+  // ✅ Nuevo prompt dinámico con contexto real:
+  const prompt = `El usuario ha escrito lo siguiente: "${text}". Respóndele con amabilidad que no lograste entender qué producto quiere elegir. Pídele que por favor te indique un número válido del 1 al ${totalProducts}, siendo claro pero humano.`;
+
+  const mensajeNatural = await naturalMessageService.generateMessage(prompt);
+
+  return bot.sendMessage(chatId, mensajeNatural);
 }
 
 

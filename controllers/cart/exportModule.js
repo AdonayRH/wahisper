@@ -5,6 +5,7 @@ const path = require('path');
 const carritoService = require('../../services/carritoService');
 const logger = require('../../utils/logger');
 
+
 /**
  * Maneja el comando para exportar el carrito
  * @param {object} bot - Instancia del bot de Telegram
@@ -45,6 +46,7 @@ async function handleExportCartCommand(bot, chatId) {
     // Eliminar el archivo temporal después de enviarlo
     setTimeout(() => {
       try {
+
         if (fs.existsSync(tempFilePath)) {
           fs.unlinkSync(tempFilePath);
           logger.log(`Usuario ${chatId}: Archivo temporal de carrito eliminado`);
@@ -60,6 +62,7 @@ async function handleExportCartCommand(bot, chatId) {
     bot.sendMessage(chatId, "Hubo un error al exportar tu carrito. Inténtalo de nuevo.");
     return false;
   }
+  
 }
 
 /**
@@ -82,6 +85,7 @@ async function exportCartToCSV(chatId) {
       const precio = parseFloat(item.precio) || 0;
       const cantidad = parseInt(item.cantidad) || 0;
       const subtotal = precio * cantidad;
+      
       
       // Escapar comas en la descripción
       const descripcionEscapada = item.DescripcionArticulo.includes(',') 
