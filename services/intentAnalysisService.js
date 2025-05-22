@@ -63,6 +63,15 @@ async function analyzeIntent(message, context = {}) {
     systemMessage += "\n- 'Admin'";
     systemMessage += "\n- 'Quiero admin'";
 
+
+    // Ejemplos para detectar la intención de seleccionar productos
+    systemMessage += "\n\nDetección de selección de productos:";
+    systemMessage += "\n- '1' o 'el primero' = productIndex: 0";
+    systemMessage += "\n- '2' o 'el segundo' = productIndex: 1"; 
+    systemMessage += "\n- '3' o 'el tercero' = productIndex: 2";
+    systemMessage += "\n- 'primer producto' = productIndex: 0";
+    systemMessage += "\n- 'último producto' = productIndex basado en cantidad total";
+
     //Instrucciones específicas para redirijir a FAREWELL (despedida)
     systemMessage += "\n\nCuando el usuario indique que no desea nada más, clasifica como FAREWELL. Esto incluye:";
     systemMessage += "\n- Responder 'no' cuando se le pregunta si necesita algo más";
@@ -196,7 +205,7 @@ async function analyzeIntent(message, context = {}) {
               },
                productIndex: {
                 type: "integer",
-                description: "Si el mensaje menciona un índice de producto (número de orden), indica cuál"
+                description: "Índice del producto seleccionado (0-based). Detectar números (1,2,3) o ordinales (primero, segundo, tercero)"
               },
               quantityMentioned: {
                 type: "integer",

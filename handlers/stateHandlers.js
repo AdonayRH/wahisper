@@ -229,7 +229,7 @@ async function handleConfirmingRemoveItemState(bot, chatId, intentAnalysis) {
     stateService.setState(chatId, STATES.INITIAL);
     return bot.sendMessage(
       chatId,
-      "Operación cancelada. No se ha eliminado nada de tu carrito."
+      "No se ha eliminado nada de tu carrito."
     );
   }
   else {
@@ -260,62 +260,39 @@ async function handleConfirmingRemoveAllState(bot, chatId, intentAnalysis) {
     stateService.setState(chatId, STATES.INITIAL);
     return bot.sendMessage(
       chatId,
-      "Operación cancelada. Tu carrito no ha sido modificado."
+      "Tu carrito no ha sido modificado."
     );
   }
   else {
     return bot.sendMessage(
       chatId,
-      "Por favor, confirma si quieres vaciar completamente tu carrito o no."
+      "Por favor, confirma si quieres vaciar completamente tu carrito."
     );
   }
 }
 
+
 /**
- * Maneja un estado específico según el contexto actual
+ * Maneja el estado SHOWING_PRODUCTS cuando el usuario responde con texto
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @param {string} text - Texto del mensaje
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
  */
-async function handleStateBasedAction(bot, chatId, text, intentAnalysis) {
+async function handleShowingProductsState(bot, chatId, text, intentAnalysis) {
   const context = stateService.getContext(chatId);
   
-  switch (context.state) {
-    case STATES.ASKING_QUANTITY:
-      return handleAskingQuantityState(bot, chatId, text, intentAnalysis);
-      
-    case STATES.ADDING_UNITS:
-    case STATES.ASKING_ADD_QUANTITY:
-      return handleAddingUnitsState(bot, chatId, text, intentAnalysis);
-
-    case STATES.REMOVING_ITEM:
-      return handleRemovingItemState(bot, chatId, text);
-      
-    // Añadir el nuevo caso para manejar la confirmación del checkout
-    case STATES.CONFIRMING_CHECKOUT:
-      return handleConfirmingCheckoutState(bot, chatId, text, intentAnalysis);
-
-    case STATES.ASKING_FOR_MORE:
-      // Si el usuario quiere seguir comprando, resetear al estado inicial
-      stateService.setState(chatId, STATES.INITIAL);
-      return null;
-      
-    case STATES.ASKING_REMOVE_QUANTITY:
-      return handleAskingRemoveQuantityState(bot, chatId, text, intentAnalysis);
-      
-    case STATES.CONFIRMING_REMOVE_ITEM:
-      return handleConfirmingRemoveItemState(bot, chatId, intentAnalysis);
-      
-    case STATES.CONFIRMING_REMOVE_ALL:
-      return handleConfirmingRemoveAllState(bot, chatId, intentAnalysis);
-      
-    default:
-      return null; // Indica que no se manejó ningún estado específico
+  // Si hay un índice de producto detectado en el análisis de intención
+  if (intentAnalysis.productIndex !== undefined) {
+    const productController = require('../controllers/productController');
+    return productController.handleProductSelection(bot, chatId, intentAnalysis.productIndex);
   }
+  
+  // Usar el handler de selección de productos
+  const intentHandlers = require('./intentHandlers');
+  return intentHandlers.handleProductSelection(bot, chatId, text, context);
 }
-
 
 /**
  * Maneja el estado CONFIRMING_CHECKOUT
@@ -371,13 +348,13 @@ async function handleConfirmingCheckoutState(bot, chatId, text, intentAnalysis) 
     // Si no se reconoce la intención, pedir clarificación
     return bot.sendMessage(
       chatId,
-      "Por favor, confirma si deseas tramitar el pedido o si prefieres cancelar."
+      "Por favor, confirmame si deseas tramitar el pedido o si prefieres cancelar."
     );
   } catch (error) {
     logger.error(`Error al manejar confirmación de checkout: ${error.message}`);
     return bot.sendMessage(
       chatId,
-      "Hubo un error al procesar tu respuesta. Por favor, intenta de nuevo o usa los botones proporcionados."
+      "Disculpa no te he entendido. Por favor, dime si deseas continuar con el pago."
     );
   }
 }
@@ -414,6 +391,55 @@ function handleSpecialState(bot, chatId, text) {
   }
   
   return false;
+}
+
+
+/**
+ * Maneja un estado específico según el contexto actual
+ * @param {object} bot - Instancia del bot de Telegram
+ * @param {number} chatId - ID del chat
+ * @param {string} text - Texto del mensaje
+ * @param {object} intentAnalysis - Resultado del análisis de intención
+ * @returns {Promise} - Promesa con la respuesta
+ */
+async function handleStateBasedAction(bot, chatId, text, intentAnalysis) {
+  const context = stateService.getContext(chatId);
+  
+  switch (context.state) {
+    case STATES.ASKING_QUANTITY:
+      return handleAskingQuantityState(bot, chatId, text, intentAnalysis);
+      
+    case STATES.ADDING_UNITS:
+    case STATES.ASKING_ADD_QUANTITY:
+      return handleAddingUnitsState(bot, chatId, text, intentAnalysis);
+
+    case STATES.REMOVING_ITEM:
+      return handleRemovingItemState(bot, chatId, text);
+      
+    // Añadir el nuevo caso para manejar la confirmación del checkout
+    case STATES.CONFIRMING_CHECKOUT:
+      return handleConfirmingCheckoutState(bot, chatId, text, intentAnalysis);
+
+    case STATES.ASKING_FOR_MORE:
+      // Si el usuario quiere seguir comprando, resetear al estado inicial
+      stateService.setState(chatId, STATES.INITIAL);
+      return null;
+      
+    case STATES.ASKING_REMOVE_QUANTITY:
+      return handleAskingRemoveQuantityState(bot, chatId, text, intentAnalysis);
+      
+    case STATES.CONFIRMING_REMOVE_ITEM:
+      return handleConfirmingRemoveItemState(bot, chatId, intentAnalysis);
+      
+    case STATES.CONFIRMING_REMOVE_ALL:
+      return handleConfirmingRemoveAllState(bot, chatId, intentAnalysis);
+    
+    case STATES.SHOWING_PRODUCTS:
+      return handleShowingProductsState(bot, chatId, text, intentAnalysis);
+
+    default:
+      return null; // Indica que no se manejó ningún estado específico
+  }
 }
 
 module.exports = {

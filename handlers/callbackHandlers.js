@@ -101,6 +101,77 @@ async function processCallbackQuery(bot, callbackQuery) {
 }
 
 /**
+ * Maneja callbacks relacionados con estadísticas
+ * Este método solo debe llamarse después de verificar que el usuario es admin
+ * @param {object} bot - Instancia del bot de Telegram
+ * @param {number} chatId - ID del chat
+ * @param {string} data - Datos del callback
+ */
+async function handleStatsCallbacks(bot, chatId, data) {
+  const statsController = require('../controllers/admin/statsController');
+  
+  if (data === 'admin_stats') {
+    await statsController.showStatsPanel(bot, chatId);
+  }
+  else if (data === 'admin_stats_summary') {
+    await statsController.showStatsSummary(bot, chatId);
+  }
+  else if (data === 'admin_stats_pending') {
+    await statsController.showPendingOrdersStats(bot, chatId);
+  }
+  else if (data === 'admin_stats_completed') {
+    await statsController.showCompletedOrdersStats(bot, chatId);
+  }
+  else if (data === 'admin_stats_canceled') {
+    await statsController.showCanceledOrdersStats(bot, chatId);
+  }
+  else if (data === 'admin_stats_inventory') {
+    await statsController.showInventoryStats(bot, chatId);
+  }
+  else if (data === 'admin_stats_users') {
+    await statsController.showUserStats(bot, chatId);
+  }
+  else if (data === 'admin_stats_export') {
+    await statsController.exportStats(bot, chatId);
+  }
+  else if (data === 'admin_stats_pending_all') {
+    // Función para ver todos los pedidos pendientes (a implementar)
+    bot.sendMessage(
+      chatId,
+      "Próximamente: Vista completa de todos los pedidos pendientes"
+    );
+  }
+  else if (data === 'admin_stats_completed_all') {
+    // Función para ver todos los pedidos completados (a implementar)
+    bot.sendMessage(
+      chatId,
+      "Próximamente: Vista completa de todos los pedidos completados"
+    );
+  }
+  else if (data === 'admin_stats_canceled_all') {
+    // Función para ver todos los pedidos cancelados (a implementar)
+    bot.sendMessage(
+      chatId,
+      "Próximamente: Vista completa de todos los pedidos cancelados"
+    );
+  }
+  else if (data === 'admin_stats_inventory_out') {
+    // Función para ver productos agotados (a implementar)
+    bot.sendMessage(
+      chatId,
+      "Próximamente: Vista completa de productos agotados"
+    );
+  }
+  else if (data === 'admin_stats_users_all') {
+    // Función para ver todos los usuarios (a implementar)
+    bot.sendMessage(
+      chatId,
+      "Próximamente: Vista completa de todos los usuarios"
+    );
+  }
+}
+
+/**
  * Maneja callbacks relacionados con la administración
  * Este método solo debe llamarse después de verificar que el usuario es admin
  * @param {object} bot - Instancia del bot de Telegram
@@ -117,6 +188,9 @@ async function handleAdminCallbacks(bot, chatId, data) {
   }
   else if (data === 'admin_user_management') {
     adminController.handleUserManagement(bot, chatId);
+  }
+  else if (data === 'admin_stats') {
+    adminController.handleStats(bot, chatId);
   }
   // Otros callbacks específicos de admin...
 }
@@ -335,7 +409,7 @@ async function handleCartActionCallbacks(bot, chatId, data) {
   }
   else if (data === 'clear_cart') {
     // Vaciar carrito
-    cartController.handleClearCartCommand(bot, chatId);
+    cartController.handleStartClearCart(bot, chatId);
   }
   else if (data === 'export_cart') {
     // Exportar carrito
@@ -354,6 +428,7 @@ async function handleCartActionCallbacks(bot, chatId, data) {
 module.exports = {
   processCallbackQuery,
   handleAdminCallbacks,
+  handleStatsCallbacks,
   handleInventoryCallbacks,
   handleRemoveCallbacks,
   handleClearCartCallbacks,
