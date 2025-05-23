@@ -1,5 +1,4 @@
 // Maneja las funciones relacionadas con exportar el carrito
-
 const fs = require('fs');
 const path = require('path');
 const carritoService = require('../../services/carritoService');

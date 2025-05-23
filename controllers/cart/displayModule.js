@@ -1,5 +1,4 @@
 // Maneja las funciones relacionadas con mostrar el carrito
-
 const carritoService = require('../../services/carritoService');
 const buttonGeneratorService = require('../../services/buttonGeneratorService');
 const logger = require('../../utils/logger');
