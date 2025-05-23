@@ -1,4 +1,4 @@
-// Controlador actualizado para manejar el proceso de tramitación del pedido
+// Controlador para manejar el proceso de tramitación del pedido
 const carritoService = require('../services/carritoService');
 const buttonGeneratorService = require('../services/buttonGeneratorService');
 const stateService = require('../services/botStateService');

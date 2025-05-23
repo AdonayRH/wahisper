@@ -50,7 +50,34 @@ async function processCallbackQuery(bot, callbackQuery) {
         return; // Terminamos el procesamiento aquí
       }
       
-      // 3b. Si ES admin, procesamos el callback de administración
+      // 3b. Si ES admin, procesamos callbacks específicos de admin AQUÍ
+      if (data === 'admin_inventory') {
+        await adminController.handleInventoryManagement(bot, chatId);
+        return;
+      }
+      else if (data === 'admin_upload_inventory') {
+        await adminController.handleUploadInventory(bot, chatId);
+        return;
+      }
+      else if (data === 'admin_user_management') {
+        await adminController.handleUserManagement(bot, chatId);
+        return;
+      }
+      else if (data === 'admin_stats') {
+        await adminController.handleStats(bot, chatId);
+        return;
+      }
+      else if (data === 'admin_back') {
+        await bot.sendMessage(chatId, "Panel de Administración", buttonService.generateAdminButtons());
+        return;
+      }
+      // Callbacks relacionados con inventario
+      else if (data.startsWith('save_inventory_') || data === 'cancel_inventory') {
+        await handleInventoryCallbacks(bot, chatId, messageId, data);
+        return;
+      }
+      
+      // 3c. Si no se manejó arriba, intentar con el controlador de admin
       const wasProcessed = await adminController.processAdminCallbacks(bot, callbackQuery);
       
       // Si el callback ya fue procesado por el controlador de admin, terminamos

@@ -310,8 +310,32 @@ async function processAdminCallbacks(bot, callbackQuery) {
   }
   
   try {
+    // === Gestión de Inventario ===
+    if (data === 'admin_inventory') {
+      await handleInventoryManagement(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_upload_inventory') {
+      await handleUploadInventory(bot, chatId);
+      return true;
+    }
+    else if (data.startsWith('save_inventory_')) {
+      const fileName = data.replace('save_inventory_', '');
+      const fileProcessingService = require('../services/fileProcessingService');
+      await handleSaveInventory(bot, chatId, messageId, fileName, fileProcessingService);
+      return true;
+    }
+    else if (data === 'cancel_inventory') {
+      await handleCancelInventory(bot, chatId, messageId);
+      return true;
+    }
+    
     // === User Management ===
-    if (data === 'admin_user_management') {
+    else if (data === 'admin_management') {
+      await managementController.showAdminManagementPanel(bot, chatId);
+      return true;
+    }
+    else if (data === 'admin_user_management') {
       await managementController.showAdminManagementPanel(bot, chatId);
       return true;
     }
@@ -379,10 +403,6 @@ async function processAdminCallbacks(bot, callbackQuery) {
     }
     
     // === Navigation ===
-    else if (data === 'admin_management') {
-      await managementController.showAdminManagementPanel(bot, chatId);
-      return true;
-    }
     else if (data === 'admin_back') {
       await bot.sendMessage(chatId, "Panel de Administración", buttonService.generateAdminButtons());
       return true;
