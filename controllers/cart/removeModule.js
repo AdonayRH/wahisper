@@ -1,5 +1,4 @@
 // Maneja las funciones relacionadas con eliminar productos del carrito
-
 const carritoService = require('../../services/carritoService');
 const stateService = require('../../services/botStateService');
 const displayModule = require('./displayModule');
