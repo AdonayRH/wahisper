@@ -1,139 +1,94 @@
-const { DEFAULT_WELCOME_MESSAGE, DEFAULT_ERROR_MESSAGE } = require('../config/constants');
-const telegramService = require('../services/telegramService');
-const aiController = require('./aiController');
+const bot = require("../services/telegramService");
 const logger = require('../utils/logger');
+const handlers = require('../handlers');
+const audioController = require('./audioController');
 
-/**
- * Configura los manejadores del bot de Telegram
- * @param {Object} bot - Instancia del bot de Telegraf
- */
-const setupBot = (bot) => {
-  // Comando /start
-  bot.start(async (ctx) => {
+
+// Configuración inicial
+logger.log('Iniciando bot de Telegram...');
+
+// Configurar intervalos de limpieza de contextos
+setInterval(() => {
+  logger.log("Ejecutando limpieza de contextos inactivos");
+  const stateService = require('../services/botStateService');
+  stateService.cleanupInactiveContexts(30); // 30 minutos
+}, 30 * 60 * 1000);
+
+// Registrar manejadores de comandos
+handlers.commandHandlers.registerCommandHandlers(bot);
+
+// Configurar manejador principal de mensajes
+bot.on("message", async (msg) => {
+  if (msg.text && !msg.text.startsWith('/')) {
+    await handlers.messageHandlers.processUserMessage(bot, msg);
+  }
+});
+
+// Configurar manejador de callbacks (botones)
+bot.on('callback_query', async (callbackQuery) => {
+  await handlers.callbackHandlers.processCallbackQuery(bot, callbackQuery);
+});
+
+// Manejar mensajes de voz
+bot.on('voice', async (msg) => {
+  try {
+    // Comprobar si el archivo de voz es válido
+    if (!msg.voice || !msg.voice.file_id) {
+      return bot.sendMessage(msg.chat.id, "No se pudo procesar el mensaje de voz. Por favor, intenta de nuevo.");
+    }
+    
+    // Procesar el mensaje de voz usando audioController
+    await audioController.handleVoiceMessage(bot, msg);
+  } catch (error) {
+    console.error("Error global en el manejador de voz:", error);
+    
     try {
-      await telegramService.saveUserMessage(ctx);
-      
-      await ctx.reply(DEFAULT_WELCOME_MESSAGE);
-      
-      // Registrar la respuesta del bot
-      await telegramService.saveBotResponse(
-        ctx.from.id,
-        DEFAULT_WELCOME_MESSAGE,
-        ctx.message.message_id
+      const chatId = msg.chat.id;
+      bot.sendMessage(
+        chatId,
+        "Ha ocurrido un error inesperado al procesar el mensaje de voz. Por favor, intenta de nuevo o escribe tu mensaje."
       );
-    } catch (error) {
-      logger.error(`Error en comando start: ${error.message}`);
-      ctx.reply(DEFAULT_ERROR_MESSAGE);
+      
+      // Restablecer estado a INITIAL para evitar que se quede en un estado inconsistente
+      stateService.setState(chatId, stateService.STATES.INITIAL);
+    } catch (sendError) {
+      console.error("Error al enviar mensaje de error:", sendError);
     }
-  });
+  }
+});
 
-  // Comando /help
-  bot.help(async (ctx) => {
+// Manejar archivos de audio
+bot.on('audio', async (msg) => {
+  try {
+    // Comprobar si el archivo de audio es válido
+    if (!msg.audio || !msg.audio.file_id) {
+      return bot.sendMessage(msg.chat.id, "No se pudo procesar el archivo de audio. Por favor, intenta de nuevo.");
+    }
+    
+    // Procesar el archivo de audio usando audioController
+    await audioController.handleAudioFile(bot, msg);
+  } catch (error) {
+    console.error("Error global en el manejador de audio:", error);
+    
     try {
-      await telegramService.saveUserMessage(ctx);
-      
-      const helpMessage = `
-Comandos disponibles:
-/start - Iniciar el bot
-/help - Mostrar esta ayuda
-/reset - Reiniciar la conversación
-
-Puedes enviarme cualquier mensaje y te responderé usando IA.
-      `;
-      
-      await ctx.reply(helpMessage);
-      
-      // Registrar la respuesta del bot
-      await telegramService.saveBotResponse(
-        ctx.from.id,
-        helpMessage,
-        ctx.message.message_id
+      const chatId = msg.chat.id;
+      bot.sendMessage(
+        chatId,
+        "Ha ocurrido un error inesperado al procesar el archivo de audio. Por favor, intenta de nuevo o escribe tu mensaje."
       );
-    } catch (error) {
-      logger.error(`Error en comando help: ${error.message}`);
-      ctx.reply(DEFAULT_ERROR_MESSAGE);
+      
+      // Restablecer estado a INITIAL para evitar que se quede en un estado inconsistente
+      stateService.setState(chatId, stateService.STATES.INITIAL);
+    } catch (sendError) {
+      console.error("Error al enviar mensaje de error:", sendError);
     }
-  });
+  }
+});
 
-  // Comando /reset para reiniciar la conversación
-  bot.command('reset', async (ctx) => {
-    try {
-      const user = await telegramService.saveUserMessage(ctx);
-      
-      // Reiniciar el historial de conversación (mantiene solo el último mensaje)
-      if (user && user.user) {
-        user.user.conversationHistory = [];
-        await user.user.save();
-      }
-      
-      const resetMessage = "La conversación ha sido reiniciada. ¿En qué puedo ayudarte ahora?";
-      await ctx.reply(resetMessage);
-      
-      // Registrar la respuesta del bot
-      await telegramService.saveBotResponse(
-        ctx.from.id,
-        resetMessage,
-        ctx.message.message_id
-      );
-    } catch (error) {
-      logger.error(`Error en comando reset: ${error.message}`);
-      ctx.reply(DEFAULT_ERROR_MESSAGE);
-    }
-  });
+// Configurar manejadores de errores globales
+handlers.errorHandlers.setupGlobalErrorHandlers();
 
-  // Manejar todos los mensajes de texto que no son comandos
-  bot.on('text', async (ctx) => {
-    try {
-      // Indicar al usuario que estamos procesando su mensaje
-      const typingMessage = await ctx.reply("Procesando tu mensaje...");
-      
-      // Guardar mensaje del usuario
-      const { user } = await telegramService.saveUserMessage(ctx);
-      
-      // Obtener respuesta de la IA
-      const aiResponse = await aiController.processMessage(user.telegramId, ctx.message.text);
-      
-      // Eliminar mensaje de "procesando"
-      await ctx.telegram.deleteMessage(ctx.chat.id, typingMessage.message_id).catch(() => {
-        logger.warn('No se pudo eliminar el mensaje de "procesando"');
-      });
-      
-      // Enviar respuesta
-      await ctx.reply(aiResponse);
-      
-      // Guardar respuesta en la base de datos
-      await telegramService.saveBotResponse(ctx.from.id, aiResponse, ctx.message.message_id);
-    } catch (error) {
-      logger.error(`Error al procesar mensaje: ${error.message}`);
-      ctx.reply('Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta nuevamente.');
-    }
-  });
+logger.log('Bot configurado y listo para recibir mensajes');
 
-  // Manejar mensajes de media (fotos, documentos, etc.)
-  bot.on(['photo', 'document', 'video', 'voice'], async (ctx) => {
-    try {
-      // Guardar mensaje del usuario
-      await telegramService.saveUserMessage(ctx);
-      
-      // Por ahora, solo responder que recibimos el archivo
-      const mediaType = ctx.message.photo ? 'imagen' : 
-                       ctx.message.document ? 'documento' :
-                       ctx.message.video ? 'video' :
-                       ctx.message.voice ? 'nota de voz' : 'archivo';
-      
-      const response = `He recibido tu ${mediaType}. Actualmente no puedo procesar este tipo de contenido, pero puedes enviarme un mensaje de texto para ayudarte.`;
-      
-      await ctx.reply(response);
-      
-      // Guardar respuesta del bot
-      await telegramService.saveBotResponse(ctx.from.id, response, ctx.message.message_id);
-    } catch (error) {
-      logger.error(`Error al procesar mensaje de media: ${error.message}`);
-      ctx.reply(DEFAULT_ERROR_MESSAGE);
-    }
-  });
-};
-
-module.exports = {
-  setupBot
-};
+// Exportar bot para uso en otros módulos
+module.exports = bot;

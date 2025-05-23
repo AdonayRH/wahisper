@@ -1,31 +1,23 @@
-const openaiService = require('../services/openaiService');
-const telegramService = require('../services/telegramService');
-const logger = require('../utils/logger');
+const Articulo = require("../models/articulo");
+const { getEmbedding } = require("../services/openaiService");
+const { calcularSimilitud } = require("../utils/helpers");
+const { TOP_K_RESULTS } = require("../config/constants");
 
-/**
- * Procesa un mensaje de usuario a través de la IA
- * @param {Number} telegramId - ID de Telegram del usuario
- * @param {String} message - Mensaje del usuario
- * @returns {Promise<String>} - Respuesta generada por la IA
- */
-const processMessage = async (telegramId, message) => {
-  try {
-    // Obtener historial de conversación del usuario
-    const conversationHistory = await telegramService.getConversationHistory(telegramId);
-    
-    // Preparar contexto para OpenAI
-    const context = openaiService.prepareContext(conversationHistory);
-    
-    // Generar respuesta
-    const response = await openaiService.generateResponse(context);
-    
-    return response;
-  } catch (error) {
-    logger.error(`Error al procesar mensaje con IA: ${error.message}`);
-    return 'Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta nuevamente.';
-  }
-};
+// Función para buscar artículos similares
+// usando embeddings
+async function buscarArticulosSimilares(texto) {
+  const inputEmbedding = await getEmbedding(texto);
+  const articulos = await Articulo.find({ embedding: { $exists: true } }).select('+embedding');
 
-module.exports = {
-  processMessage
-};
+  // Filtrar artículos que no tengan embedding
+  const comparaciones = articulos.map((art) => ({
+    articulo: art,
+    similitud: calcularSimilitud(inputEmbedding, art.embedding)
+  }));
+  
+  // Ordenar por similitud y limitar a los mejores resultados
+  comparaciones.sort((a, b) => b.similitud - a.similitud);
+  return comparaciones.slice(0, TOP_K_RESULTS);
+}
+
+module.exports = { buscarArticulosSimilares };

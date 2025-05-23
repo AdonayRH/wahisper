@@ -1,54 +1,55 @@
-const mongoose = require('mongoose');
-const { USER_ROLES } = require('../config/constants');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  telegramId: {
-    type: Number,
-    required: true,
-    unique: true
+  telegramId: { type: String, required: true, unique: true },
+  first_name: { type: String, required: true },
+  last_name: String,
+  username: String,
+  // Añadimos campo de rol para gestión de administradores
+  role: { 
+    type: String, 
+    enum: ['user', 'admin', 'superadmin'],
+    default: 'user'
   },
-  username: {
-    type: String,
-    required: false
+  isActive: { 
+    type: Boolean, 
+    default: true 
   },
-  firstName: {
-    type: String,
-    required: false
+  lastActivity: { 
+    type: Date, 
+    default: Date.now 
   },
-  lastName: {
-    type: String,
-    required: false
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
   },
-  role: {
-    type: String,
-    enum: Object.values(USER_ROLES),
-    default: USER_ROLES.USER
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  lastInteraction: {
-    type: Date,
-    default: Date.now
-  },
-  conversationHistory: [{
-    role: {
-      type: String,
-      enum: ['user', 'assistant', 'system'],
-      required: true
-    },
-    content: {
-      type: String,
-      required: true
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now
-    }
-  }]
-}, {
-  timestamps: true
+  updatedAt: { 
+    type: Date, 
+    default: Date.now 
+  }
 });
 
-module.exports = mongoose.model('User', userSchema);
+// Middleware para actualizar la fecha de actualización
+userSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Middleware para actualizar la fecha en los updates
+userSchema.pre('findOneAndUpdate', function(next) {
+  this.set({ updatedAt: Date.now() });
+  next();
+});
+
+// Método para verificar si es administrador
+userSchema.methods.isAdmin = function() {
+  return this.role === 'admin' || this.role === 'superadmin';
+};
+
+// Método para actualizar la actividad
+userSchema.methods.updateActivity = function() {
+  this.lastActivity = Date.now();
+  return this.save();
+};
+
+module.exports = mongoose.model("User", userSchema);
