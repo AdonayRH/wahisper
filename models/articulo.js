@@ -5,8 +5,8 @@ const articuloSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true,
-    index: true
+    trim: true
+    // Removido: index: true (para evitar índice duplicado)
   },
   DescripcionArticulo: {
     type: String,
@@ -33,7 +33,7 @@ const articuloSchema = new mongoose.Schema({
   strict: false
 });
 
-// Índice para CodigoArticulo
+// Índice único para CodigoArticulo (solo uno)
 articuloSchema.index({ CodigoArticulo: 1 }, { unique: true });
 
 // Índice para búsqueda por texto

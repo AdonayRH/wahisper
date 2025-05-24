@@ -1,12 +1,9 @@
-// Configuración mejorada para MongoDB con reintentos automáticos
 require("dotenv").config();
 const mongoose = require("mongoose");
 const logger = require("../utils/logger");
 
-// Opciones de conexión mejoradas
+// Opciones de conexión actualizadas (sin opciones deprecated)
 const mongoOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 15000, // Timeout de selección del servidor: 15 segundos
   socketTimeoutMS: 45000, // Timeout del socket: 45 segundos
   heartbeatFrequencyMS: 30000, // Frecuencia de latido: 30 segundos

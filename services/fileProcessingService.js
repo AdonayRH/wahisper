@@ -155,7 +155,7 @@ async function processFile(filePath) {
 }
 
 /**
- * Guarda los artículos en la base de datos
+ * Guarda los artículos en la base de datos con mejor manejo de actualizaciones
  * @param {Array} articulos - Array de artículos a guardar
  * @returns {Promise<object>} - Resultado de la operación
  */
@@ -165,37 +165,90 @@ async function saveArticulos(articulos) {
   let errors = 0;
   const errorDetails = [];
   
-  // Procesar cada artículo
-  for (const articulo of articulos) {
+  console.log(`🔄 Iniciando procesamiento de ${articulos.length} artículos...`);
+  
+  // Procesar cada artículo individualmente
+  for (let i = 0; i < articulos.length; i++) {
+    const articulo = articulos[i];
     try {
-      // Intentar actualizar si existe, crear si no
-      const result = await Articulo.updateOne(
-        { CodigoArticulo: articulo.CodigoArticulo },
-        { $set: articulo },
-        { upsert: true }
-      );
+      console.log(`📝 Procesando artículo ${i + 1}/${articulos.length}: ${articulo.CodigoArticulo}`);
       
-      if (result.upsertedCount) {
+      // Verificar si el artículo ya existe
+      const existingArticulo = await Articulo.findOne({ 
+        CodigoArticulo: articulo.CodigoArticulo 
+      });
+      
+      if (existingArticulo) {
+        // ACTUALIZAR artículo existente
+        console.log(`🔄 Actualizando artículo existente: ${articulo.CodigoArticulo}`);
+        
+        // Comparar valores para ver si realmente hay cambios
+        const hasChanges = 
+          existingArticulo.DescripcionArticulo !== articulo.DescripcionArticulo ||
+          existingArticulo.PVP !== articulo.PVP ||
+          existingArticulo.unidades !== articulo.unidades;
+        
+        if (hasChanges) {
+          // Actualizar con los nuevos valores
+          await Articulo.findByIdAndUpdate(
+            existingArticulo._id,
+            {
+              DescripcionArticulo: articulo.DescripcionArticulo,
+              PVP: articulo.PVP,
+              unidades: articulo.unidades,
+              updatedAt: new Date()
+            },
+            { new: true }
+          );
+          
+          updated++;
+          console.log(`✅ Artículo actualizado: ${articulo.CodigoArticulo}`);
+        } else {
+          console.log(`ℹ️ Sin cambios para: ${articulo.CodigoArticulo}`);
+          // Aunque no haya cambios, contamos como actualizado para efectos del reporte
+          updated++;
+        }
+      } else {
+        // CREAR nuevo artículo
+        console.log(`➕ Creando nuevo artículo: ${articulo.CodigoArticulo}`);
+        
+        const newArticulo = new Articulo({
+          CodigoArticulo: articulo.CodigoArticulo,
+          DescripcionArticulo: articulo.DescripcionArticulo,
+          PVP: articulo.PVP,
+          unidades: articulo.unidades
+        });
+        
+        await newArticulo.save();
         created++;
-      } else if (result.modifiedCount) {
-        updated++;
+        console.log(`✅ Nuevo artículo creado: ${articulo.CodigoArticulo}`);
       }
+      
     } catch (error) {
+      console.error(`❌ Error procesando artículo ${articulo.CodigoArticulo}:`, error.message);
       errors++;
       errorDetails.push({
         articulo: articulo.CodigoArticulo,
-        error: error.message
+        error: error.message,
+        data: articulo
       });
     }
   }
   
+  console.log(`\n📊 Resumen del procesamiento:`);
+  console.log(`   ✅ Creados: ${created}`);
+  console.log(`   🔄 Actualizados: ${updated}`);
+  console.log(`   ❌ Errores: ${errors}`);
+  console.log(`   📦 Total procesados: ${articulos.length}`);
+  
   return {
-    success: true,
+    success: errors === 0 || (created + updated) > 0, // Éxito si no hay errores O si se procesó algo
     total: articulos.length,
     created,
     updated,
     errors,
-    errorDetails: errorDetails.length > 0 ? errorDetails : undefined
+    errorDetails: errorDetails.length > 0 ? errorDetails : undefined,
+    message: `Procesamiento completado: ${created} creados, ${updated} actualizados, ${errors} errores`
   };
 }
 
@@ -208,8 +261,49 @@ function exportToJSON(articulos) {
   return JSON.stringify(articulos, null, 2);
 }
 
+/**
+ * Función de diagnóstico para verificar la conexión a la base de datos
+ * @returns {Promise<object>} - Estado de la conexión
+ */
+async function diagnoseDatabase() {
+  try {
+    // Intentar contar documentos
+    const count = await Articulo.countDocuments();
+    console.log(`🔍 Diagnóstico DB: ${count} artículos en la base de datos`);
+    
+    // Intentar crear un artículo de prueba
+    const testArticulo = new Articulo({
+      CodigoArticulo: `TEST_${Date.now()}`,
+      DescripcionArticulo: 'Artículo de prueba',
+      PVP: 1.0,
+      unidades: 1
+    });
+    
+    await testArticulo.save();
+    console.log(`✅ Test de escritura exitoso`);
+    
+    // Eliminar el artículo de prueba
+    await Articulo.findByIdAndDelete(testArticulo._id);
+    console.log(`🧹 Artículo de prueba eliminado`);
+    
+    return {
+      success: true,
+      count,
+      message: 'Base de datos funcionando correctamente'
+    };
+  } catch (error) {
+    console.error(`❌ Error en diagnóstico de DB:`, error.message);
+    return {
+      success: false,
+      error: error.message,
+      message: 'Error en la conexión a la base de datos'
+    };
+  }
+}
+
 module.exports = {
   processFile,
   saveArticulos,
-  exportToJSON
+  exportToJSON,
+  diagnoseDatabase
 };
