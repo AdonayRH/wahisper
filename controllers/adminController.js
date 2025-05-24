@@ -154,7 +154,7 @@ async function processAdminDocument(bot, msg, fileProcessingService) {
       writer.on('error', reject);
     });
     
-    // Informar que se está procesando - usamos sendMessage en lugar de editMessageText
+    // Informar que se está procesando usamos sendMessage en lugar de editMessageText
     // para evitar el error si los mensajes son idénticos
     bot.deleteMessage(chatId, processingMsg.message_id)
       .catch(err => console.error("Error al eliminar mensaje:", err));
@@ -212,47 +212,141 @@ async function handleSaveInventory(bot, chatId, messageId, fileName, fileProcess
   const filePath = path.join(__dirname, '../uploads', fileName);
   
   // Verificar si es admin y si el archivo existe
-  if (!await isAdmin(chatId.toString()) || !fs.existsSync(filePath)) {
-    return bot.sendMessage(chatId, "No se puede procesar esta solicitud");
+  if (!await isAdmin(chatId.toString())) {
+    return bot.sendMessage(chatId, "No tienes permisos para procesar esta solicitud");
+  }
+  
+  if (!fs.existsSync(filePath)) {
+    return bot.sendMessage(chatId, "El archivo ya no está disponible. Por favor, súbelo nuevamente.");
   }
   
   try {
-    // Eliminar mensaje anterior y enviar nuevo
+    // Eliminar mensaje anterior
     bot.deleteMessage(chatId, messageId)
       .catch(err => console.error("Error al eliminar mensaje:", err));
       
-    const processingMsg = await bot.sendMessage(chatId, "⏳ Guardando inventario en base de datos...");
+    // Mensaje de diagnóstico inicial
+    const diagnosticMsg = await bot.sendMessage(chatId, "🔍 Verificando conexión a la base de datos...");
     
-    // Procesar y guardar en BD
+    // PASO 1: Diagnóstico de la base de datos
+    const dbDiagnosis = await fileProcessingService.diagnoseDatabase();
+    
+    // Actualizar mensaje con resultado del diagnóstico
+    await bot.editMessageText(
+      `🔍 Diagnóstico de BD: ${dbDiagnosis.message}\n📝 Procesando archivo...`,
+      {
+        chat_id: chatId,
+        message_id: diagnosticMsg.message_id
+      }
+    ).catch(err => {
+      // Si no se puede editar, enviar nuevo mensaje
+      bot.sendMessage(chatId, `🔍 Diagnóstico: ${dbDiagnosis.message}\n📝 Procesando archivo...`);
+    });
+    
+    if (!dbDiagnosis.success) {
+      throw new Error(`Error de base de datos: ${dbDiagnosis.error}`);
+    }
+    
+    // PASO 2: Procesar archivo
+    console.log(`📂 Procesando archivo: ${filePath}`);
     const articulos = await fileProcessingService.processFile(filePath);
+    console.log(`📦 ${articulos.length} artículos extraídos del archivo`);
+    
+    // Actualizar mensaje de progreso
+    await bot.editMessageText(
+      `✅ Archivo procesado: ${articulos.length} artículos\n💾 Guardando en base de datos...`,
+      {
+        chat_id: chatId,
+        message_id: diagnosticMsg.message_id
+      }
+    ).catch(err => {
+      bot.sendMessage(chatId, `✅ Archivo procesado: ${articulos.length} artículos\n💾 Guardando en BD...`);
+    });
+    
+    // PASO 3: Guardar en BD con logs detallados
+    console.log(`💾 Iniciando guardado de ${articulos.length} artículos...`);
     const result = await fileProcessingService.saveArticulos(articulos);
+    console.log(`💾 Guardado completado:`, result);
     
-    // Eliminar archivo temporal
+    // PASO 4: Eliminar archivo temporal
     await fs.remove(filePath);
+    console.log(`🧹 Archivo temporal eliminado: ${filePath}`);
     
-    // Eliminar mensaje de procesamiento
-    bot.deleteMessage(chatId, processingMsg.message_id)
-      .catch(err => console.error("Error al eliminar mensaje:", err));
+    // PASO 5: Eliminar mensaje de procesamiento
+    bot.deleteMessage(chatId, diagnosticMsg.message_id)
+      .catch(err => console.error("Error al eliminar mensaje de procesamiento:", err));
       
-    // Informar resultado
-    bot.sendMessage(
-      chatId,
-      `✅ Inventario actualizado correctamente:\n\n` +
-      `• Total productos: ${result.total}\n` +
-      `• Nuevos productos: ${result.created}\n` +
-      `• Productos actualizados: ${result.updated}\n` +
-      `• Errores: ${result.errors || 0}`
-    );
+    // PASO 6: Informar resultado detallado
+    let resultMessage = '';
+    
+    if (result.success) {
+      resultMessage = `✅ *Inventario actualizado exitosamente*\n\n` +
+                     `📊 *Resumen:*\n` +
+                     `• Total artículos procesados: ${result.total}\n` +
+                     `• Nuevos artículos creados: ${result.created}\n` +
+                     `• Artículos actualizados: ${result.updated}\n` +
+                     `• Errores encontrados: ${result.errors}\n\n`;
+      
+      if (result.errorDetails && result.errorDetails.length > 0) {
+        resultMessage += `⚠️ *Detalles de errores:*\n`;
+        result.errorDetails.slice(0, 3).forEach(error => {
+          resultMessage += `• ${error.articulo}: ${error.error}\n`;
+        });
+        
+        if (result.errorDetails.length > 3) {
+          resultMessage += `• ... y ${result.errorDetails.length - 3} errores más\n`;
+        }
+        resultMessage += '\n';
+      }
+      
+      resultMessage += `✨ El inventario se ha actualizado correctamente.`;
+    } else {
+      resultMessage = `❌ *Error al actualizar inventario*\n\n` +
+                     `Se produjeron errores durante el procesamiento:\n` +
+                     `• Total artículos: ${result.total}\n` +
+                     `• Procesados correctamente: ${result.created + result.updated}\n` +
+                     `• Errores: ${result.errors}\n\n`;
+      
+      if (result.errorDetails && result.errorDetails.length > 0) {
+        resultMessage += `🔍 *Primeros errores encontrados:*\n`;
+        result.errorDetails.slice(0, 5).forEach(error => {
+          resultMessage += `• ${error.articulo}: ${error.error}\n`;
+        });
+      }
+      
+      resultMessage += `\n⚠️ Por favor, revisa el formato del archivo y vuelve a intentarlo.`;
+    }
+    
+    await bot.sendMessage(chatId, resultMessage, { parse_mode: 'Markdown' });
     
     // Restablecer estado
     stateService.setState(chatId, stateService.STATES.INITIAL);
     stateService.setContextValue(chatId, 'pendingFile', undefined);
     
   } catch (error) {
-    console.error('Error guardando inventario:', error);
+    console.error('💥 Error crítico guardando inventario:', error);
     
-    // En caso de error, enviar nuevo mensaje
-    bot.sendMessage(chatId, `❌ Error al guardar el inventario: ${error.message}`);
+    // Eliminar archivo temporal en caso de error
+    if (fs.existsSync(filePath)) {
+      await fs.remove(filePath).catch(err => 
+        console.error('Error eliminando archivo temporal:', err)
+      );
+    }
+    
+    // Enviar mensaje de error detallado
+    const errorMessage = `❌ *Error crítico al procesar inventario*\n\n` +
+                         `🔍 *Detalles técnicos:*\n` +
+                         `• Error: ${error.message}\n` +
+                         `• Archivo: ${fileName}\n` +
+                         `• Tiempo: ${new Date().toLocaleString()}\n\n` +
+                         `🛠️ *Pasos para solucionar:*\n` +
+                         `1. Verifica que el archivo tenga el formato correcto\n` +
+                         `2. Asegúrate de que las columnas sean: CodigoArticulo, DescripcionArticulo, PVP, unidades\n` +
+                         `3. Verifica la conexión a la base de datos\n` +
+                         `4. Intenta subir el archivo nuevamente\n\n` +
+                         `Si el problema persiste, contacta al administrador del sistema.`;
+    
+    await bot.sendMessage(chatId, errorMessage, { parse_mode: 'Markdown' });
     
     // Restablecer estado
     stateService.setState(chatId, stateService.STATES.INITIAL);
