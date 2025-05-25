@@ -10,7 +10,7 @@ const logger = require('../../utils/logger');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showStatsPanel(bot, chatId) {
   try {
     // Mostrar panel principal de estadísticas
@@ -49,7 +49,7 @@ async function showStatsPanel(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showStatsSummary(bot, chatId) {
   try {
     // Indicar que estamos procesando
@@ -138,7 +138,7 @@ async function showStatsSummary(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showPendingOrdersStats(bot, chatId) {
   try {
     // Indicar que estamos procesando
@@ -225,7 +225,7 @@ async function showPendingOrdersStats(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showCompletedOrdersStats(bot, chatId) {
   try {
     // Indicar que estamos procesando
@@ -327,7 +327,7 @@ async function showCompletedOrdersStats(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showCanceledOrdersStats(bot, chatId) {
   try {
     // Indicar que estamos procesando
@@ -414,7 +414,7 @@ async function showCanceledOrdersStats(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showInventoryStats(bot, chatId) {
   try {
     // Indicar que estamos procesando
@@ -493,7 +493,7 @@ async function showInventoryStats(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showUserStats(bot, chatId) {
   try {
     // Indicar que estamos procesando
@@ -584,7 +584,7 @@ async function showUserStats(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function exportStats(bot, chatId) {
   try {
     // Indicar que estamos procesando

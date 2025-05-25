@@ -14,7 +14,7 @@ const DEFAULT_MODEL = "gpt-3.5-turbo";
  * @param {number} temperature - Control de creatividad
  * @param {number} maxTokens - Límite de tokens en la respuesta
  * @returns {string} - Mensaje generado por la IA
- */
+*/
 async function generateMessage(prompt, userInput = null, examples = [], temperature = 0.8, maxTokens = 60) {
   const messages = [
     {

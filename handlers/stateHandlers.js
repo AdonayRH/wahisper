@@ -15,7 +15,7 @@ const STATES = stateService.STATES;
  * @param {string} text - Texto del mensaje
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleAskingQuantityState(bot, chatId, text, intentAnalysis) {
   try {
     const context = stateService.getContext(chatId);
@@ -68,7 +68,7 @@ async function handleAskingQuantityState(bot, chatId, text, intentAnalysis) {
  * @param {string} text - Texto del mensaje
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleAddingUnitsState(bot, chatId, text, intentAnalysis) {
   try {
     // Intentar extraer un número del texto
@@ -110,7 +110,7 @@ async function handleAddingUnitsState(bot, chatId, text, intentAnalysis) {
  * @param {number} chatId - ID del chat
  * @param {string} text - Texto del mensaje
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleRemovingItemState(bot, chatId, text) {
   const items = carritoService.getCart(chatId.toString())?.items || [];
   
@@ -170,7 +170,7 @@ async function handleRemovingItemState(bot, chatId, text) {
  * @param {string} text - Texto del mensaje
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleAskingRemoveQuantityState(bot, chatId, text, intentAnalysis) {
   try {
     // Primero intentar extraer un número directamente
@@ -220,7 +220,7 @@ async function handleAskingRemoveQuantityState(bot, chatId, text, intentAnalysis
  * @param {number} chatId - ID del chat
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleConfirmingRemoveItemState(bot, chatId, intentAnalysis) {
   if (intentAnalysis.intent === "CONFIRMATION") {
     return cartController.handleConfirmRemove(bot, chatId);
@@ -246,7 +246,7 @@ async function handleConfirmingRemoveItemState(bot, chatId, intentAnalysis) {
  * @param {number} chatId - ID del chat
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleConfirmingRemoveAllState(bot, chatId, intentAnalysis) {
   if (intentAnalysis.intent === "CONFIRMATION") {
     await cartController.handleClearCartCommand(bot, chatId);
@@ -279,7 +279,7 @@ async function handleConfirmingRemoveAllState(bot, chatId, intentAnalysis) {
  * @param {string} text - Texto del mensaje
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleShowingProductsState(bot, chatId, text, intentAnalysis) {
   const context = stateService.getContext(chatId);
   
@@ -301,7 +301,7 @@ async function handleShowingProductsState(bot, chatId, text, intentAnalysis) {
  * @param {string} text - Texto del mensaje
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleConfirmingCheckoutState(bot, chatId, text, intentAnalysis) {
   try {
     // Patrones de confirmación
@@ -366,7 +366,7 @@ async function handleConfirmingCheckoutState(bot, chatId, text, intentAnalysis) 
  * @param {number} chatId - ID del chat
  * @param {string} text - Texto del mensaje
  * @returns {boolean} - Indica si se manejó el estado
- */
+*/
 function handleSpecialState(bot, chatId, text) {
   const context = stateService.getContext(chatId);
   
@@ -401,7 +401,7 @@ function handleSpecialState(bot, chatId, text) {
  * @param {string} text - Texto del mensaje
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleStateBasedAction(bot, chatId, text, intentAnalysis) {
   const context = stateService.getContext(chatId);
   

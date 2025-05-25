@@ -14,7 +14,7 @@ const STATES = stateService.STATES;
  * @param {object} product - Producto a añadir
  * @param {number} quantity - Cantidad
  * @returns {boolean} - Indica si se añadió correctamente
- */
+*/
 async function addToCart(bot, chatId, product, quantity) {
   try {
     // Verificar stock disponible
@@ -82,7 +82,7 @@ async function addToCart(bot, chatId, product, quantity) {
  * @param {number} chatId - ID del chat
  * @param {string|number} productReference - Referencia al producto (nombre o índice)
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleStartAddUnits(bot, chatId, productReference) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -166,7 +166,7 @@ async function handleStartAddUnits(bot, chatId, productReference) {
  * @param {number} chatId - ID del chat
  * @param {number|string} quantity - Cantidad a añadir
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleAddQuantity(bot, chatId, quantity) {
   try {
     const context = stateService.getContext(chatId);

@@ -5,7 +5,7 @@
  * @param {Array} products - Lista de productos
  * @param {string} action - Prefijo para el callback_data
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateProductButtons(products, action = 'select') {
   const rows = [];
   
@@ -37,7 +37,7 @@ function generateProductButtons(products, action = 'select') {
  * Genera botones para seleccionar cantidad
  * @param {string|number} productIndex - Índice o identificador del producto
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateQuantityButtons(productIndex) {
   return {
     reply_markup: {
@@ -60,7 +60,7 @@ function generateQuantityButtons(productIndex) {
 /**
  * Genera botones de confirmación
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateConfirmButtons() {
   return {
     reply_markup: {
@@ -77,7 +77,7 @@ function generateConfirmButtons() {
 /**
  * Genera botones para después de añadir al carrito
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generatePostAddButtons() {
   return {
     reply_markup: {
@@ -98,7 +98,7 @@ function generatePostAddButtons() {
  * Genera botones para el carrito
  * @returns {object} - Objeto con configuración de botones
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateCartButtons(itemCount = 0) {
   const buttons = [
     [
@@ -134,7 +134,7 @@ function generateCartButtons(itemCount = 0) {
 /**
  * Genera botones para después de completar un pedido
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generatePostCheckoutButtons() {
   return {
     reply_markup: {
@@ -151,7 +151,7 @@ function generatePostCheckoutButtons() {
 /**
  * Genera botones para confirmar pago
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateCheckoutButtons() {
   return {
     reply_markup: {
@@ -168,7 +168,7 @@ function generateCheckoutButtons() {
 /**
  * Genera botones para carrito vacío
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateEmptyCartButtons() {
   return {
     reply_markup: {
@@ -183,7 +183,7 @@ function generateEmptyCartButtons() {
 /**
  * Genera botones para el panel de administración
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateAdminButtons() {
   return {
     reply_markup: {
@@ -199,7 +199,7 @@ function generateAdminButtons() {
 /**
  * Genera botones para gestión de administradores
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateAdminManagementButtons() {
   return {
     reply_markup: {
@@ -215,7 +215,7 @@ function generateAdminManagementButtons() {
 /**
  * Genera botones para gestión de inventario
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateInventoryButtons() {
   return {
     reply_markup: {
@@ -232,7 +232,7 @@ function generateInventoryButtons() {
  * Genera botones para confirmar subida de inventario
  * @param {string} fileName - Nombre del archivo
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateInventoryConfirmButtons(fileName) {
   return {
     reply_markup: {
@@ -249,7 +249,7 @@ function generateInventoryConfirmButtons(fileName) {
 /**
  * Genera botones para el panel de estadísticas
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateStatsButtons() {
   return {
     reply_markup: {
@@ -271,7 +271,7 @@ function generateStatsButtons() {
  * Genera botones para navegar entre vistas de estadísticas
  * @param {string} category - Categoría de estadísticas (summary, pending, etc.)
  * @returns {object} - Objeto con configuración de botones
- */
+*/
 function generateStatsNavigationButtons(category) {
   return {
     reply_markup: {

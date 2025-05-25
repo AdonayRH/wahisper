@@ -388,7 +388,7 @@ async function handleCancelInventory(bot, chatId, messageId) {
  * @param {object} bot - Instancia del bot
  * @param {object} callbackQuery - Objeto de callback de Telegram
  * @returns {Promise<boolean>} - Indica si el callback fue procesado
- */
+*/
 async function processAdminCallbacks(bot, callbackQuery) {
   const chatId = callbackQuery.message.chat.id;
   const messageId = callbackQuery.message.message_id;

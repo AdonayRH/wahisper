@@ -15,7 +15,7 @@ const STATES = stateService.STATES;
  * Procesa los callbacks de los botones que presiona el usuario
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} callbackQuery - Información del callback de Telegram
- */
+*/
 async function processCallbackQuery(bot, callbackQuery) {
   try {
     const chatId = callbackQuery.message.chat.id;
@@ -159,7 +159,7 @@ async function processCallbackQuery(bot, callbackQuery) {
 
 /**
  * Maneja callbacks relacionados con añadir cantidad
- */
+*/
 async function handleAddQuantityCallbacks(bot, chatId, data) {
   try {
     if (data === 'add_qty_custom') {
@@ -177,7 +177,7 @@ async function handleAddQuantityCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con la eliminación de productos
- */
+*/
 async function handleRemoveCallbacks(bot, chatId, data) {
   if (data.startsWith('remove_qty_')) {
     const quantity = data.replace('remove_qty_', '');
@@ -194,7 +194,7 @@ async function handleRemoveCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con el vaciado del carrito
- */
+*/
 async function handleClearCartCallbacks(bot, chatId, data) {
   if (data === 'confirm_clear_cart') {
     await cartController.handleClearCartCommand(bot, chatId);
@@ -209,7 +209,7 @@ async function handleClearCartCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con el proceso de checkout
- */
+*/
 async function handleCheckoutCallbacks(bot, chatId, data) {
   if (data === 'checkout') {
     checkoutController.handleCheckout(bot, chatId);
@@ -230,7 +230,7 @@ async function handleCheckoutCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con la navegación
- */
+*/
 async function handleNavigationCallbacks(bot, chatId, data) {
   if (data === 'start_remove_item') {
     bot.sendMessage(chatId, "¿Qué producto deseas eliminar? Indica su número (1, 2, 3...) o escribe su nombre.");
@@ -248,7 +248,7 @@ async function handleNavigationCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con la selección de productos
- */
+*/
 async function handleSelectCallbacks(bot, chatId, data) {
   const productIndex = parseInt(data.split('_')[1]);
   productController.handleProductSelection(bot, chatId, productIndex);
@@ -256,7 +256,7 @@ async function handleSelectCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con la cantidad
- */
+*/
 async function handleQuantityCallbacks(bot, chatId, data) {
   if (data.startsWith('qty_custom_')) {
     const productIndex = parseInt(data.split('_')[2]);
@@ -273,7 +273,7 @@ async function handleQuantityCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con la confirmación de añadir al carrito
- */
+*/
 async function handleConfirmAddCallbacks(bot, chatId, data) {
   if (data === 'confirm_add') {
     conversationController.handleFinalConfirmation(bot, chatId, true);
@@ -285,7 +285,7 @@ async function handleConfirmAddCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con acciones del carrito
- */
+*/
 async function handleCartActionCallbacks(bot, chatId, data) {
   if (data === 'continue_shopping') {
     stateService.setState(chatId, STATES.INITIAL);

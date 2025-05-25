@@ -7,7 +7,7 @@ const logger = require('../../utils/logger');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
  * @returns {Promise<boolean>} - Promesa con resultado (true si fue manejado como solicitud de admin)
- */
+*/
 async function handleAdminRequest(bot, msg) {
   const chatId = msg.chat.id;
   const userData = {

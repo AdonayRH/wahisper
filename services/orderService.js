@@ -8,7 +8,7 @@ const inventoryService = require('./inventoryService');
  * @param {Array} items - Artículos del carrito
  * @param {object} userData - Datos del usuario
  * @returns {Promise<object>} - Resultado de la creación del pedido
- */
+*/
 async function createOrder(telegramId, items, userData) {
   try {
     // Generar número de pedido único
@@ -76,7 +76,7 @@ async function createOrder(telegramId, items, userData) {
  * @param {string} telegramId - ID de Telegram del usuario
  * @param {number} limit - Límite de resultados
  * @returns {Promise<Array>} - Lista de pedidos
- */
+*/
 async function getUserOrders(telegramId, limit = 5) {
   try {
     const orders = await Pedido.find({ telegramId })
@@ -94,7 +94,7 @@ async function getUserOrders(telegramId, limit = 5) {
  * Obtiene un pedido por su número
  * @param {string} orderNumber - Número de pedido
  * @returns {Promise<object>} - Pedido encontrado
- */
+*/
 async function getOrderByNumber(orderNumber) {
   try {
     const order = await Pedido.findOne({ orderNumber });
@@ -110,7 +110,7 @@ async function getOrderByNumber(orderNumber) {
  * @param {string} orderNumber - Número de pedido
  * @param {string} status - Nuevo estado
  * @returns {Promise<object>} - Resultado de la actualización
- */
+*/
 async function updateOrderStatus(orderNumber, status) {
   try {
     const validStatus = ['PENDIENTE', 'PAGADO', 'ENVIADO', 'ENTREGADO', 'CANCELADO'];
@@ -149,7 +149,7 @@ async function updateOrderStatus(orderNumber, status) {
 /**
  * Genera un número de pedido único
  * @returns {string} - Número de pedido
- */
+*/
 function generateOrderNumber() {
   const randomNum = Math.floor(100000 + Math.random() * 900000);
   const date = new Date();

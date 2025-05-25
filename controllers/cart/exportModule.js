@@ -10,7 +10,7 @@ const logger = require('../../utils/logger');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleExportCartCommand(bot, chatId) {
   try {
     const jsonData = carritoService.exportCartToJSON(chatId.toString());
@@ -68,7 +68,7 @@ async function handleExportCartCommand(bot, chatId) {
  * Exporta el carrito en formato CSV
  * @param {number} chatId - ID del chat
  * @returns {Promise<string>} - Ruta al archivo CSV generado
- */
+*/
 async function exportCartToCSV(chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -127,7 +127,7 @@ async function exportCartToCSV(chatId) {
  * Genera un resumen en texto del carrito
  * @param {number} chatId - ID del chat
  * @returns {string} - Texto con el resumen del carrito
- */
+*/
 function generateCartSummary(chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());

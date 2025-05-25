@@ -17,7 +17,7 @@ const openai = new OpenAI({
  * Verifica si el mensaje del usuario indica una intención de checkout
  * @param {string} text - Texto del mensaje
  * @returns {boolean} - Indica si es un comando de checkout
- */
+*/
 function isCheckoutCommand(text) {
   if (!text) return false;
   
@@ -36,7 +36,7 @@ function isCheckoutCommand(text) {
  * Analiza el texto del usuario para detectar acciones secundarias
  * @param {string} text - Texto del mensaje
  * @returns {object} - Objeto con acciones detectadas
- */
+*/
 function extractSecondaryActions(text) {
   if (!text) return { hasCheckout: false };
   
@@ -63,7 +63,7 @@ function extractSecondaryActions(text) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleViewCartIntent(bot, chatId) {
   return cartController.handleCartCommand(bot, chatId);
 }
@@ -74,7 +74,7 @@ async function handleViewCartIntent(bot, chatId) {
  * @param {number} chatId - ID del chat
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleAddUnitsIntent(bot, chatId, intentAnalysis) {
   // Verificar si se ha mencionado un producto específico o un índice
   if (intentAnalysis.productReference) {
@@ -96,7 +96,7 @@ async function handleAddUnitsIntent(bot, chatId, intentAnalysis) {
  * @param {number} chatId - ID del chat
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleRemoveFromCartIntent(bot, chatId, intentAnalysis) {
   // Verificar si se ha mencionado un producto específico o un índice
   if (intentAnalysis.productReference) {
@@ -121,7 +121,7 @@ async function handleRemoveFromCartIntent(bot, chatId, intentAnalysis) {
  * @param {number} chatId - ID del chat
  * @param {string} text - Texto del mensaje
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleCheckoutIntent(bot, chatId, text) {
   // Verificar si el carrito está vacío
   const carritoCheckout = carritoService.getCart(chatId.toString());
@@ -161,7 +161,7 @@ async function handleCheckoutIntent(bot, chatId, text) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleClearCartIntent(bot, chatId) {
   return cartController.handleStartClearCart(bot, chatId);
 }
@@ -173,7 +173,7 @@ async function handleClearCartIntent(bot, chatId) {
  * @param {string} text - ID del chat
 
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleGreetingIntent(bot, chatId, text) {
   try {
     const completion = await openai.chat.completions.create({
@@ -205,7 +205,7 @@ async function handleGreetingIntent(bot, chatId, text) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleFarewellIntent(bot, chatId) {
   return conversationController.handleEndConversation(bot, chatId);
 }
@@ -216,7 +216,7 @@ async function handleFarewellIntent(bot, chatId) {
  * @param {number} chatId - ID del chat
  * @param {object} context - Contexto de la conversación
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleRejectionIntent(bot, chatId, context) {
   // Manejar rechazo según el estado actual
   if (context.state === STATES.ASKING_FOR_MORE) {
@@ -237,7 +237,7 @@ async function handleRejectionIntent(bot, chatId, context) {
  * @param {object} context - Contexto de la conversación
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleProductConfirmation(bot, chatId, context, intentAnalysis) {
   // Verificar si hay productos que confirmar
   if (!context.lastMentionedArticles || context.lastMentionedArticles.length === 0) {
@@ -272,7 +272,7 @@ async function handleProductConfirmation(bot, chatId, context, intentAnalysis) {
  * @param {object} context - Contexto de la conversación
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleConfirmationIntent(bot, chatId, context, intentAnalysis) {
   // Manejar confirmación según el estado actual
   if (context.state === STATES.SHOWING_PRODUCTS) {
@@ -297,7 +297,7 @@ async function handleConfirmationIntent(bot, chatId, context, intentAnalysis) {
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @param {string} text - Texto del mensaje
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleQuantityIntent(bot, chatId, context, intentAnalysis, text) {
   if (context.state === STATES.ASKING_QUANTITY) {
     // Si hay una cantidad mencionada
@@ -368,7 +368,7 @@ async function handleQuantityIntent(bot, chatId, context, intentAnalysis, text) 
  * @param {number} chatId - ID del chat
  * @param {string} text - Texto del mensaje
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleQueryIntent(bot, chatId, text) {
   return productController.handleProductSearch(bot, chatId, text);
 }
@@ -381,7 +381,7 @@ async function handleQueryIntent(bot, chatId, text) {
  * @param {object} context - Contexto de la conversación
  * @param {object} intentAnalysis - Resultado del análisis de intención
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleIntentBasedAction(bot, chatId, text, context, intentAnalysis) {
   switch (intentAnalysis.intent) {
 
@@ -436,7 +436,7 @@ async function handleIntentBasedAction(bot, chatId, text, context, intentAnalysi
  * @param {string} text - Texto del mensaje
  * @param {object} context - Contexto de la conversación
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function handleProductSelection(bot, chatId, text, context) {
   const totalProducts = context.lastMentionedArticles?.length || 0;
 

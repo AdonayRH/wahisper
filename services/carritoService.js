@@ -7,7 +7,7 @@ const carritos = {};
  * @param {object} articulo - Objeto con los datos del artículo
  * @param {number} cantidad - Cantidad del artículo a añadir
  * @returns {object} - El carrito actualizado
- */
+*/
 function addToCart(telegramId, articulo, cantidad = 1) {
   try {
     // Inicializar carrito si no existe
@@ -72,7 +72,7 @@ function addToCart(telegramId, articulo, cantidad = 1) {
  * @param {string} telegramId - ID del usuario en Telegram
  * @param {object} userData - Datos del usuario
  * @returns {object} - El carrito actualizado
- */
+*/
 function saveUserData(telegramId, userData) {
   try {
     // Inicializar carrito si no existe
@@ -101,7 +101,7 @@ function saveUserData(telegramId, userData) {
  * Obtiene el carrito completo de un usuario
  * @param {string} telegramId - ID del usuario en Telegram
  * @returns {object|null} - El carrito del usuario o null si no existe
- */
+*/
 function getCart(telegramId) {
   return carritos[telegramId] || null;
 }
@@ -111,7 +111,7 @@ function getCart(telegramId) {
  * @param {string} telegramId - ID del usuario en Telegram
  * @param {number} itemIndex - Índice del artículo a eliminar
  * @returns {object} - El carrito actualizado
- */
+*/
 function removeFromCart(telegramId, itemIndex) {
   try {
     const carrito = carritos[telegramId];
@@ -134,7 +134,7 @@ function removeFromCart(telegramId, itemIndex) {
  * Vacía el carrito de un usuario
  * @param {string} telegramId - ID del usuario en Telegram
  * @returns {object} - Objeto con estado de éxito
- */
+*/
 function clearCart(telegramId) {
   try {
     if (carritos[telegramId]) {
@@ -155,7 +155,7 @@ function clearCart(telegramId) {
  * @param {number} itemIndex - Índice del artículo a actualizar
  * @param {object} updatedItem - Objeto con los datos actualizados
  * @returns {object} - El carrito actualizado
- */
+*/
 function updateCartItem(telegramId, itemIndex, updatedItem) {
   try {
     const carrito = carritos[telegramId];
@@ -181,7 +181,7 @@ function updateCartItem(telegramId, itemIndex, updatedItem) {
  * @param {number} itemIndex - Índice del artículo a actualizar
  * @param {number} newQuantity - Nueva cantidad
  * @returns {object} - El carrito actualizado
- */
+*/
 function updateItemQuantity(telegramId, itemIndex, newQuantity) {
   try {
     const carrito = carritos[telegramId];
@@ -209,7 +209,7 @@ function updateItemQuantity(telegramId, itemIndex, newQuantity) {
  * Exporta el carrito completo en formato JSON para enviar al frontend
  * @param {string} telegramId - ID del usuario en Telegram
  * @returns {string} - Cadena JSON con los datos del carrito
- */
+*/
 function exportCartToJSON(telegramId) {
   const carrito = carritos[telegramId];
   if (!carrito) {

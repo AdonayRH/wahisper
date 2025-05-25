@@ -7,7 +7,7 @@ const inventoryService = require('../services/inventoryService');
 
 /**
  * Actualizar la función handleCheckout para mejorar la experiencia del usuario
- */
+*/
 async function handleCheckout(bot, chatId) {
   try {
     console.log(`Procesando solicitud de checkout para usuario ${chatId}`);
@@ -115,7 +115,7 @@ async function handleCheckout(bot, chatId) {
  * Maneja la confirmación del pedido
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
- */
+*/
 async function handleConfirmCheckout(bot, chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -220,7 +220,7 @@ async function handleConfirmCheckout(bot, chatId) {
  * Maneja la cancelación del proceso de checkout
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
- */
+*/
 async function handleCancelCheckout(bot, chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -245,7 +245,7 @@ async function handleCancelCheckout(bot, chatId) {
  * Maneja la visualización de pedidos del usuario
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
- */
+*/
 async function handleViewOrders(bot, chatId) {
   try {
     // Obtener pedidos recientes del usuario
@@ -304,7 +304,7 @@ async function handleViewOrders(bot, chatId) {
  * Inicia un nuevo proceso de compra
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
- */
+*/
 async function handleNewPurchase(bot, chatId) {
   try {
     // Restablecer estado
@@ -325,7 +325,7 @@ async function handleNewPurchase(bot, chatId) {
  * Obtiene el texto descriptivo del estado de un pedido
  * @param {string} status - Estado del pedido
  * @returns {string} - Texto descriptivo
- */
+*/
 function getStatusText(status) {
   const statusMap = {
     'PENDIENTE': '⏳ Pendiente',

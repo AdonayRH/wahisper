@@ -16,7 +16,7 @@ const mongoOptions = {
  * Conectar a MongoDB con reintentos
  * @param {number} retryAttempt - Número de intento actual
  * @param {number} maxRetries - Número máximo de reintentos
- */
+*/
 async function connectWithRetry(retryAttempt = 0, maxRetries = 5) {
   const retryDelay = Math.min(Math.pow(2, retryAttempt) * 1000, 30000); // Exponential backoff, max 30 segundos
   
