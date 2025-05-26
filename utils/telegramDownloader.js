@@ -11,7 +11,7 @@ const logger = require('./logger');
  * @param {string} botToken - Token del bot de Telegram
  * @param {string} outputPath - Ruta donde guardar el archivo
  * @returns {Promise<string>} - Ruta al archivo descargado
- */
+*/
 async function downloadTelegramFile(fileId, botToken, outputPath) {
   try {
     logger.log(`Obteniendo información del archivo: ${fileId}`);
@@ -68,7 +68,7 @@ async function downloadTelegramFile(fileId, botToken, outputPath) {
  * @param {string} outputPath - Ruta donde guardar el archivo
  * @param {number} maxRetries - Número máximo de reintentos
  * @returns {Promise<string>} - Ruta al archivo descargado
- */
+*/
 async function downloadWithRetry(fileId, botToken, outputPath, maxRetries = 3) {
   let lastError;
   

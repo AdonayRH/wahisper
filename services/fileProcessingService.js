@@ -47,7 +47,7 @@ function parseFloat(val) {
  * Normaliza un objeto de artículo
  * @param {object} item - Item del archivo
  * @returns {object} - Objeto normalizado
- */
+*/
 function normalizeArticulo(item) {
   // Obtener las claves del objeto de manera case-insensitive
   const keys = Object.keys(item);
@@ -158,7 +158,7 @@ async function processFile(filePath) {
  * Guarda los artículos en la base de datos con mejor manejo de actualizaciones
  * @param {Array} articulos - Array de artículos a guardar
  * @returns {Promise<object>} - Resultado de la operación
- */
+*/
 async function saveArticulos(articulos) {
   let created = 0;
   let updated = 0;
@@ -256,7 +256,7 @@ async function saveArticulos(articulos) {
  * Exporta artículos a formato JSON
  * @param {Array} articulos - Array de artículos
  * @returns {string} - JSON formateado
- */
+*/
 function exportToJSON(articulos) {
   return JSON.stringify(articulos, null, 2);
 }
@@ -264,7 +264,7 @@ function exportToJSON(articulos) {
 /**
  * Función de diagnóstico para verificar la conexión a la base de datos
  * @returns {Promise<object>} - Estado de la conexión
- */
+*/
 async function diagnoseDatabase() {
   try {
     // Intentar contar documentos

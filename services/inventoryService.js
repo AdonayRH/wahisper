@@ -5,7 +5,7 @@ const Articulo = require('../models/articulo');
  * Verifica si hay suficiente stock para todos los artículos del carrito
  * @param {Array} items - Artículos del carrito
  * @returns {Promise<{success: boolean, insufficientItems: Array}>} - Resultado de la verificación
- */
+*/
 async function verifyStock(items) {
   try {
     const insufficientItems = [];
@@ -53,7 +53,7 @@ async function verifyStock(items) {
  * Actualiza el inventario descontando las unidades vendidas
  * @param {Array} items - Artículos vendidos
  * @returns {Promise<{success: boolean, updatedItems: number, errors: Array}>} - Resultado de la actualización
- */
+*/
 async function updateInventory(items) {
   try {
     let updatedItems = 0;
@@ -115,7 +115,7 @@ async function updateInventory(items) {
  * Verifica stock y actualiza inventario en una sola operación
  * @param {Array} items - Artículos del carrito
  * @returns {Promise<{success: boolean, message: string, insufficientItems: Array}>} - Resultado de la operación
- */
+*/
 async function processInventoryForOrder(items) {
   try {
     // Primero verificar si hay suficiente stock
@@ -155,7 +155,7 @@ async function processInventoryForOrder(items) {
  * Obtiene la disponibilidad de un producto específico
  * @param {string} codigoArticulo - Código del artículo
  * @returns {Promise<{available: boolean, stock: number}>} - Información de disponibilidad
- */
+*/
 async function getProductAvailability(codigoArticulo) {
   try {
     const articulo = await Articulo.findOne({ CodigoArticulo: codigoArticulo });

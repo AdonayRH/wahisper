@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 /**
  * Esquema para almacenar solicitudes de permisos de administrador
- */
+*/
 const adminRequestSchema = new mongoose.Schema({
   // ID de Telegram del usuario solicitante
   telegramId: { 

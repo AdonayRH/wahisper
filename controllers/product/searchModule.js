@@ -10,7 +10,7 @@ const inventoryService = require('../../services/inventoryService');
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
  * @param {string} query - Consulta de búsqueda
- */
+*/
 async function handleProductSearch(bot, chatId, query) {
   try {
     const context = stateService.getContext(chatId);

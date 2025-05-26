@@ -8,7 +8,7 @@ const inventoryService = require('../../services/inventoryService');
  * @param {number} productIndex - Índice del producto
  * @param {number} availableStock - Stock disponible
  * @returns {object} - Configuración de botones
- */
+*/
 function generateQuantityButtonsWithStock(productIndex, availableStock) {
   // Si hay stock limitado, ajustar los botones
   if (availableStock <= 5) {
@@ -52,7 +52,7 @@ function generateQuantityButtonsWithStock(productIndex, availableStock) {
  * @param {number} chatId - ID del chat
  * @param {number} productIndex - Índice del producto
  * @param {number} quantity - Cantidad seleccionada
- */
+*/
 async function handleQuantitySelection(bot, chatId, productIndex, quantity) {
   try {
     const context = stateService.getContext(chatId);

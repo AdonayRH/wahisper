@@ -15,7 +15,7 @@ const logger = require('../utils/logger');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
  * @returns {Promise} - Promesa con la respuesta
- */
+*/
 async function processUserMessage(bot, msg) {
   try {
     const chatId = msg.chat.id;

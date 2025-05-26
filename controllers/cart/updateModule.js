@@ -8,7 +8,7 @@ const logger = require('../../utils/logger');
  * @param {number} itemIndex - Índice del ítem
  * @param {number} newQuantity - Nueva cantidad
  * @returns {object} - Carrito actualizado
- */
+*/
 function updateItemQuantity(telegramId, itemIndex, newQuantity) {
   try {
     const carrito = carritoService.getCart(telegramId);
@@ -44,7 +44,7 @@ function updateItemQuantity(telegramId, itemIndex, newQuantity) {
  * @param {number} itemIndex - Índice del ítem
  * @param {number} requestedQuantity - Cantidad solicitada
  * @returns {Promise<object>} - Resultado de la validación
- */
+*/
 async function validateQuantityAgainstStock(telegramId, itemIndex, requestedQuantity) {
   try {
     const carrito = carritoService.getCart(telegramId);
@@ -97,7 +97,7 @@ async function validateQuantityAgainstStock(telegramId, itemIndex, requestedQuan
  * @param {string} telegramId - ID de Telegram del usuario
  * @param {Array} updates - Array de actualizaciones {index, quantity}
  * @returns {Promise<object>} - Resultado de la actualización
- */
+*/
 async function batchUpdateItems(telegramId, updates) {
   try {
     const results = {

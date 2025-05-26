@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 /**
  * Esquema para registrar los pedidos de los usuarios
- */
+*/
 const pedidoSchema = new mongoose.Schema({
   // Número de pedido único
   orderNumber: { 

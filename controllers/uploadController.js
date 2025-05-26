@@ -4,7 +4,7 @@ const path = require('path');
 
 /**
  * Maneja la subida y procesamiento de archivos
- */
+*/
 async function uploadFile(req, res) {
   try {
     // Verificar que hay un archivo

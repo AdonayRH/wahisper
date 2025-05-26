@@ -12,7 +12,7 @@ const path = require('path');
  * Maneja el comando /admin
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 function handleAdminCommand(bot, msg) {
   const chatId = msg.chat.id;
   logger.log(`Comando /admin recibido de usuario ${chatId}`);
@@ -23,7 +23,7 @@ function handleAdminCommand(bot, msg) {
  * Maneja el comando /cancel
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 function handleCancelCommand(bot, msg) {
   const chatId = msg.chat.id;
   logger.log(`Comando /cancel recibido de usuario ${chatId}`);
@@ -34,7 +34,7 @@ function handleCancelCommand(bot, msg) {
  * Maneja el comando /carrito
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 function handleCartCommand(bot, msg) {
   const chatId = msg.chat.id;
   logger.log(`Comando /carrito recibido de usuario ${chatId}`);
@@ -45,7 +45,7 @@ function handleCartCommand(bot, msg) {
  * Maneja el comando /limpiarcarrito
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 function handleClearCartCommand(bot, msg) {
   const chatId = msg.chat.id;
   logger.log(`Comando /limpiarcarrito recibido de usuario ${chatId}`);
@@ -56,7 +56,7 @@ function handleClearCartCommand(bot, msg) {
  * Maneja el comando /exportarcarrito
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 function handleExportCartCommand(bot, msg) {
   const chatId = msg.chat.id;
   logger.log(`Comando /exportarcarrito recibido de usuario ${chatId}`);
@@ -68,7 +68,7 @@ function handleExportCartCommand(bot, msg) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
  * @param {array} match - Coincidencia de regex
- */
+*/
 function handleRemoveCommand(bot, msg, match) {
   const chatId = msg.chat.id;
   const index = parseInt(match[1]) - 1;
@@ -80,7 +80,7 @@ function handleRemoveCommand(bot, msg, match) {
  * Maneja la recepción de documentos
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 async function handleDocumentUpload(bot, msg) {
   const chatId = msg.chat.id;
   logger.log(`Documento recibido de usuario ${chatId}: ${msg.document.file_name}`);

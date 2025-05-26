@@ -18,7 +18,7 @@ const ADMIN_IDS = process.env.ADMIN_TELEGRAM_IDS ? process.env.ADMIN_TELEGRAM_ID
  * @param {object} req - Request de Express
  * @param {object} res - Response de Express
  * @param {function} next - Función next de Express
- */
+*/
 const verifyToken = (req, res, next) => {
   // Obtener el token del header Authorization
   const authHeader = req.headers['authorization'];
@@ -50,7 +50,7 @@ const verifyToken = (req, res, next) => {
  * @param {object} req - Request de Express
  * @param {object} res - Response de Express
  * @param {function} next - Función next de Express
- */
+*/
 const verifyAdmin = (req, res, next) => {
   if (!req.user || !req.user.role || req.user.role !== 'admin') {
     return res.status(403).json({ 
@@ -66,7 +66,7 @@ const verifyAdmin = (req, res, next) => {
  * @param {object} req - Request de Express
  * @param {object} res - Response de Express
  * @param {function} next - Función next de Express
- */
+*/
 const verifyTelegramAdmin = (req, res, next) => {
   const telegramId = req.body.telegramId || req.query.telegramId;
   
@@ -83,7 +83,7 @@ const verifyTelegramAdmin = (req, res, next) => {
  * Genera un token JWT para un usuario
  * @param {object} userData - Datos del usuario para incluir en el token
  * @returns {string} - Token JWT generado
- */
+*/
 const generateToken = (userData) => {
   return jwt.sign(
     userData,
@@ -96,7 +96,7 @@ const generateToken = (userData) => {
  * Maneja el inicio de sesión de administrador
  * @param {object} req - Request de Express
  * @param {object} res - Response de Express
- */
+*/
 const loginAdmin = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -169,7 +169,7 @@ const loginAdmin = async (req, res) => {
  * Valida un token y devuelve los datos del usuario
  * @param {object} req - Request de Express
  * @param {object} res - Response de Express
- */
+*/
 const validateToken = (req, res) => {
   // req.user ya está disponible gracias al middleware verifyToken
   res.status(200).json({
@@ -186,7 +186,7 @@ const validateToken = (req, res) => {
  * Genera un hash para contraseña
  * @param {string} password - Contraseña en texto plano
  * @returns {string} - Hash de la contraseña
- */
+*/
 const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(10);
   return await bcrypt.hash(password, salt);

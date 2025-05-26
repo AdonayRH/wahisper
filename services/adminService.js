@@ -7,7 +7,7 @@ const logger = require('../utils/logger');
  * Verifica si un usuario es administrador
  * @param {string} telegramId - ID de Telegram del usuario
  * @returns {Promise<boolean>} - Indica si es administrador
- */
+*/
 async function isAdmin(telegramId) {
   try {
     // Primero verificar la lista de admins establecida en las variables de entorno
@@ -32,7 +32,7 @@ async function isAdmin(telegramId) {
  * Registra una solicitud de permisos de administrador
  * @param {object} userData - Datos del usuario
  * @returns {Promise<object>} - Solicitud creada
- */
+*/
 async function requestAdminAccess(userData) {
   try {
     if (!userData || !userData.id || !userData.first_name) {
@@ -95,7 +95,7 @@ async function requestAdminAccess(userData) {
  * @param {object} adminData - Datos del administrador que revoca
  * @param {string} reason - Motivo de la revocación
  * @returns {Promise<object>} - Resultado de la operación
- */
+*/
 async function revokeAdminAccess(telegramId, adminData, reason = "") {
   try {
     // Verificar si el usuario existe y es admin
@@ -143,7 +143,7 @@ async function revokeAdminAccess(telegramId, adminData, reason = "") {
  * Obtiene todas las solicitudes de administrador
  * @param {string} status - Filtro por estado (opcional)
  * @returns {Promise<Array>} - Lista de solicitudes
- */
+*/
 async function getAdminRequests(status = null) {
   try {
     let query = {};
@@ -169,7 +169,7 @@ async function getAdminRequests(status = null) {
  * @param {object} adminData - Datos del administrador que procesa
  * @param {string} notes - Notas opcionales
  * @returns {Promise<object>} - Resultado del procesamiento
- */
+*/
 async function processAdminRequest(requestId, action, adminData, notes = "") {
   try {
     const validActions = ['APPROVE', 'REJECT'];
@@ -243,7 +243,7 @@ async function processAdminRequest(requestId, action, adminData, notes = "") {
  * @param {object} adminData - Datos del administrador que revoca
  * @param {string} reason - Motivo de la revocación
  * @returns {Promise<object>} - Resultado de la operación
- */
+*/
 async function revokeAdminAccess(telegramId, adminData, reason = "") {
   try {
     // Verificar si el usuario existe y es admin
@@ -278,7 +278,7 @@ async function revokeAdminAccess(telegramId, adminData, reason = "") {
 /**
  * Obtiene una lista de todos los administradores
  * @returns {Promise<Array>} - Lista de administradores
- */
+*/
 async function getAllAdmins() {
   try {
     // Obtener admins desde la base de datos
