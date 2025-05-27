@@ -6,7 +6,6 @@ const articuloSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true
-    // Removido: index: true (para evitar índice duplicado)
   },
   DescripcionArticulo: {
     type: String,
@@ -25,7 +24,7 @@ const articuloSchema = new mongoose.Schema({
   },
   embedding: {
     type: [Number],
-    select: false, // No incluir en consultas
+    select: false, 
     required: false
   },
 }, { 
