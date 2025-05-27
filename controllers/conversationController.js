@@ -9,7 +9,7 @@ const productController = require('./productController');
  * @param {object} msg - Mensaje de Telegram
  * @param {object} carritoService - Servicio de carrito
  * @returns {object|null} - Datos del usuario o null
- */
+*/
 function processUserData(msg, carritoService) {
   const chatId = msg.chat.id;
   const from = msg.from;
@@ -37,7 +37,7 @@ function processUserData(msg, carritoService) {
  * Maneja el fin de la conversación
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
- */
+*/
 function handleEndConversation(bot, chatId) {
   stateService.setState(chatId, stateService.STATES.ENDING);
   
@@ -51,7 +51,7 @@ function handleEndConversation(bot, chatId) {
  * Verifica si el texto indica fin de conversación
  * @param {string} text - Texto a verificar
  * @returns {boolean} - Indica si es fin de conversación
- */
+*/
 function isEndingConversation(text) {
   const endingPatterns = [
     /^no.?$/i,
@@ -75,7 +75,7 @@ function isEndingConversation(text) {
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
  * @param {boolean} confirmed - Indica si se confirmó
- */
+*/
 async function handleFinalConfirmation(bot, chatId, confirmed) {
   try {
     const context = stateService.getContext(chatId);
@@ -114,7 +114,7 @@ async function handleFinalConfirmation(bot, chatId, confirmed) {
  * @param {number} chatId - ID del chat
  * @param {object} fs - Módulo fs
  * @param {string} path - Módulo path
- */
+*/
 function handleCancelCommand(bot, chatId, fs, path) {
   const context = stateService.getContext(chatId);
   

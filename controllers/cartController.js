@@ -7,7 +7,7 @@ const cartModules = require('./cart');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleCartCommand(bot, chatId) {
   return cartModules.handleCartCommand(bot, chatId);
 }
@@ -17,8 +17,9 @@ function handleCartCommand(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleExportCartCommand(bot, chatId) {
+  
   return cartModules.handleExportCartCommand(bot, chatId);
 }
 
@@ -28,7 +29,7 @@ function handleExportCartCommand(bot, chatId) {
  * @param {number} chatId - ID del chat
  * @param {number} index - Índice del artículo a eliminar
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleRemoveFromCartCommand(bot, chatId, index) {
   return cartModules.handleRemoveFromCartCommand(bot, chatId, index);
 }
@@ -38,7 +39,7 @@ function handleRemoveFromCartCommand(bot, chatId, index) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleClearCartCommand(bot, chatId) {
   return cartModules.handleClearCartCommand(bot, chatId);
 }
@@ -50,7 +51,7 @@ function handleClearCartCommand(bot, chatId) {
  * @param {object} product - Producto a añadir
  * @param {number} quantity - Cantidad
  * @returns {boolean} - Indica si se añadió correctamente
- */
+*/
 function addToCart(bot, chatId, product, quantity) {
   return cartModules.addToCart(bot, chatId, product, quantity);
 }
@@ -61,7 +62,7 @@ function addToCart(bot, chatId, product, quantity) {
  * @param {number} chatId - ID del chat
  * @param {number|string} productIdentifier - Índice o identificador del producto
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleStartRemoveItem(bot, chatId, productIdentifier) {
   return cartModules.handleStartRemoveItem(bot, chatId, productIdentifier);
 }
@@ -72,7 +73,7 @@ function handleStartRemoveItem(bot, chatId, productIdentifier) {
  * @param {number} chatId - ID del chat
  * @param {number|string} quantity - Cantidad a eliminar
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleRemoveQuantity(bot, chatId, quantity) {
   return cartModules.handleRemoveQuantity(bot, chatId, quantity);
 }
@@ -82,7 +83,7 @@ function handleRemoveQuantity(bot, chatId, quantity) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleConfirmRemove(bot, chatId) {
   return cartModules.handleConfirmRemove(bot, chatId);
 }
@@ -92,7 +93,7 @@ function handleConfirmRemove(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleStartClearCart(bot, chatId) {
   return cartModules.handleStartClearCart(bot, chatId);
 }
@@ -103,7 +104,7 @@ function handleStartClearCart(bot, chatId) {
  * @param {number} chatId - ID del chat
  * @param {string|number} productReference - Referencia al producto (nombre o índice)
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleStartAddUnits(bot, chatId, productReference) {
   return cartModules.handleStartAddUnits(bot, chatId, productReference);
 }
@@ -114,7 +115,7 @@ function handleStartAddUnits(bot, chatId, productReference) {
  * @param {number} chatId - ID del chat
  * @param {number|string} quantity - Cantidad a añadir
  * @returns {Promise} - Promesa de la operación
- */
+*/
 function handleAddQuantity(bot, chatId, quantity) {
   return cartModules.handleAddQuantity(bot, chatId, quantity);
 }
@@ -125,7 +126,7 @@ function handleAddQuantity(bot, chatId, quantity) {
  * @param {number} itemIndex - Índice del ítem
  * @param {number} newQuantity - Nueva cantidad
  * @returns {object} - Carrito actualizado
- */
+*/
 function updateItemQuantity(telegramId, itemIndex, newQuantity) {
   return cartModules.updateItemQuantity(telegramId, itemIndex, newQuantity);
 }

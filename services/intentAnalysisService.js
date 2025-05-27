@@ -9,7 +9,7 @@ const openai = new OpenAI({
  * @param {string} message - Mensaje del usuario
  * @param {object} context - Contexto de la conversación (opcional)
  * @returns {Promise<object>} - Objeto con la intención y confianza
- */
+*/
 async function analyzeIntent(message, context = {}) {
   try {
     // Verificar si el mensaje es válido sin necesidad de llamar a OpenAI

@@ -8,7 +8,7 @@ const logger = require('../../utils/logger');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showAdminManagementPanel(bot, chatId) {
   try {
     // Verificar si es administrador
@@ -42,7 +42,7 @@ async function showAdminManagementPanel(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showPendingRequests(bot, chatId) {
   try {
     // Verificar si es administrador
@@ -123,7 +123,7 @@ async function showPendingRequests(bot, chatId) {
  * @param {number} chatId - ID del chat
  * @param {string} requestId - ID de la solicitud
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showRequestDetails(bot, chatId, requestId) {
   try {
     // Verificar si es administrador
@@ -199,7 +199,7 @@ async function showRequestDetails(bot, chatId, requestId) {
  * @param {string} requestId - ID de la solicitud
  * @param {string} action - Acción a realizar (APPROVE/REJECT)
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function processRequest(bot, chatId, requestId, action) {
   try {
     // Verificar si es administrador
@@ -274,7 +274,7 @@ async function processRequest(bot, chatId, requestId, action) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function showAdminList(bot, chatId) {
   try {
     // Verificar si es administrador
@@ -358,7 +358,7 @@ async function showAdminList(bot, chatId) {
  * @param {number} chatId - ID del chat
  * @param {string} targetAdminId - ID del administrador a eliminar
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleRemoveAdmin(bot, chatId, targetAdminId) {
   try {
     // Verificar si es administrador quien solicita la operación
@@ -448,7 +448,7 @@ async function handleRemoveAdmin(bot, chatId, targetAdminId) {
 /**
  * Genera botones para el panel de gestión de administradores
  * @returns {object} - Configuración de botones
- */
+*/
 function generateAdminManagementButtons() {
   return {
     reply_markup: {

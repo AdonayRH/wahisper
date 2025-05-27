@@ -5,7 +5,7 @@ const productModules = require('./product');
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
  * @param {number} productIndex - Índice del producto
- */
+*/
 function handleProductSelection(bot, chatId, productIndex) {
   return productModules.handleProductSelection(bot, chatId, productIndex);
 }
@@ -15,7 +15,7 @@ function handleProductSelection(bot, chatId, productIndex) {
  * @param {number} productIndex - Índice del producto
  * @param {number} availableStock - Stock disponible
  * @returns {object} - Configuración de botones
- */
+*/
 function generateQuantityButtonsWithStock(productIndex, availableStock) {
   return productModules.generateQuantityButtonsWithStock(productIndex, availableStock);
 }
@@ -26,7 +26,7 @@ function generateQuantityButtonsWithStock(productIndex, availableStock) {
  * @param {number} chatId - ID del chat
  * @param {number} productIndex - Índice del producto
  * @param {number} quantity - Cantidad seleccionada
- */
+*/
 function handleQuantitySelection(bot, chatId, productIndex, quantity) {
   return productModules.handleQuantitySelection(bot, chatId, productIndex, quantity);
 }
@@ -36,7 +36,7 @@ function handleQuantitySelection(bot, chatId, productIndex, quantity) {
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
  * @param {string} query - Consulta de búsqueda
- */
+*/
 function handleProductSearch(bot, chatId, query) {
   return productModules.handleProductSearch(bot, chatId, query);
 }

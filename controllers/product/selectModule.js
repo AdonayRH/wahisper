@@ -7,7 +7,7 @@ const inventoryService = require('../../services/inventoryService');
  * @param {object} bot - Instancia del bot
  * @param {number} chatId - ID del chat
  * @param {number} productIndex - Índice del producto
- */
+*/
 async function handleProductSelection(bot, chatId, productIndex) {
   try {
     const context = stateService.getContext(chatId);

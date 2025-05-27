@@ -21,7 +21,7 @@ fs.ensureDirSync(TEMP_DIR);
  * @param {object} bot - Instancia del bot de Telegram
  * @param {string} fileId - ID del archivo de audio en Telegram
  * @returns {Promise<string>} - Ruta al archivo temporal
- */
+*/
 async function downloadAudioFile(bot, fileId) {
   try {
     logger.log(`Intentando descargar archivo con fileId: ${fileId}`);
@@ -59,7 +59,7 @@ async function downloadAudioFile(bot, fileId) {
  * @param {string} audioFilePath - Ruta al archivo de audio
  * @param {string} language - Código de idioma (opcional, 'es' para español)
  * @returns {Promise<string>} - Texto transcrito
- */
+*/
 async function transcribeAudio(audioFilePath, language = 'es') {
   try {
     // Verificar que el archivo existe
@@ -139,7 +139,7 @@ async function transcribeAudio(audioFilePath, language = 'es') {
  * Elimina un archivo temporal
  * @param {string} filePath - Ruta al archivo
  * @returns {Promise<boolean>} - Resultado de la operación
- */
+*/
 async function removeTemporaryFile(filePath) {
   try {
     if (fs.existsSync(filePath)) {
@@ -159,7 +159,7 @@ async function removeTemporaryFile(filePath) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} message - Mensaje de Telegram
  * @returns {Promise<string>} - Texto transcrito
- */
+*/
 async function processVoiceMessage(bot, message) {
   let tempFilePath = null;
   
@@ -191,7 +191,7 @@ async function processVoiceMessage(bot, message) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} message - Mensaje de Telegram con audio
  * @returns {Promise<string>} - Texto transcrito
- */
+*/
 async function processAudioMessage(bot, message) {
   let tempFilePath = null;
   
@@ -222,7 +222,7 @@ async function processAudioMessage(bot, message) {
  * Limpia archivos temporales antiguos
  * @param {number} maxAgeMinutes - Edad máxima en minutos para los archivos
  * @returns {Promise<number>} - Número de archivos eliminados
- */
+*/
 async function cleanupTempFiles(maxAgeMinutes = 60) {
   try {
     const files = await fs.readdir(TEMP_DIR);

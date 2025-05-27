@@ -13,6 +13,7 @@ app.use(express.json());
 app.use("/api", routes);
 
 // Conexion a la base de datos
+//CAMBIAR POR LA IP DEL DOCKER PARA CONECTARLA CON EL FRONTEND
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor web en http://localhost:${PORT}`);

@@ -1,5 +1,4 @@
 // Unifica todas las funcionalidades relacionadas con el carrito
-
 const displayModule = require('./displayModule');
 const addModule = require('./addModule');
 const removeModule = require('./removeModule');

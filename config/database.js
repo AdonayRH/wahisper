@@ -1,12 +1,9 @@
-// Configuración mejorada para MongoDB con reintentos automáticos
 require("dotenv").config();
 const mongoose = require("mongoose");
 const logger = require("../utils/logger");
 
-// Opciones de conexión mejoradas
+// Opciones de conexión actualizadas (sin opciones deprecated)
 const mongoOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 15000, // Timeout de selección del servidor: 15 segundos
   socketTimeoutMS: 45000, // Timeout del socket: 45 segundos
   heartbeatFrequencyMS: 30000, // Frecuencia de latido: 30 segundos
@@ -19,7 +16,7 @@ const mongoOptions = {
  * Conectar a MongoDB con reintentos
  * @param {number} retryAttempt - Número de intento actual
  * @param {number} maxRetries - Número máximo de reintentos
- */
+*/
 async function connectWithRetry(retryAttempt = 0, maxRetries = 5) {
   const retryDelay = Math.min(Math.pow(2, retryAttempt) * 1000, 30000); // Exponential backoff, max 30 segundos
   

@@ -1,5 +1,4 @@
 // Maneja las funciones relacionadas con mostrar el carrito
-
 const carritoService = require('../../services/carritoService');
 const buttonGeneratorService = require('../../services/buttonGeneratorService');
 const logger = require('../../utils/logger');
@@ -9,7 +8,7 @@ const logger = require('../../utils/logger');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleCartCommand(bot, chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -56,7 +55,7 @@ async function handleCartCommand(bot, chatId) {
  * Formatea un carrito para mostrarlo al usuario
  * @param {object} carrito - Objeto del carrito
  * @returns {object} - Objeto con mensaje y total
- */
+*/
 function formatCartForDisplay(carrito) {
   let total = 0;
   let mensaje = "🛒 *Tu carrito de compra:*\n\n";

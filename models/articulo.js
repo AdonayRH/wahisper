@@ -1,35 +1,41 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const articuloSchema = new mongoose.Schema({
   CodigoArticulo: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    trim: true
   },
   DescripcionArticulo: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  Categoria: {
-    type: String,
-    required: false
-  },
-  Precio: {
+  PVP: {
     type: Number,
-    required: false
-  },
-  Stock: {
-    type: Number,
+    required: true,
     default: 0
   },
+  unidades: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   embedding: {
-    type: [Number], // Array de números para el vector de embedding
-    required: false,
-    index: true // Opcional: si tienes muchos documentos, considera un índice
-  }
-}, {
-  timestamps: true
+    type: [Number],
+    select: false, 
+    required: false
+  },
+}, { 
+  timestamps: true,
+  strict: false
 });
 
-// Si hay error al encontrar el modelo, crearlo
-module.exports = mongoose.models.Articulo || mongoose.model('Articulo', articuloSchema);
+// Índice único para CodigoArticulo (solo uno)
+articuloSchema.index({ CodigoArticulo: 1 }, { unique: true });
+
+// Índice para búsqueda por texto
+articuloSchema.index({ DescripcionArticulo: 'text' });
+
+module.exports = mongoose.model("Articulo", articuloSchema, "articulo");

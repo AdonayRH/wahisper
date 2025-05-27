@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
  * @param {Error} error - Error ocurrido
- */
+*/
 function handleProcessingError(bot, msg, error) {
   logger.error(`Error global en el manejador de mensajes: ${error.message}`);
   logger.error(error.stack);
@@ -32,7 +32,7 @@ function handleProcessingError(bot, msg, error) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} callbackQuery - Información del callback
  * @param {Error} error - Error ocurrido
- */
+*/
 function handleCallbackError(bot, callbackQuery, error) {
   logger.error(`Error en el manejo de callback_query: ${error.message}`);
   logger.error(error.stack);
@@ -52,7 +52,7 @@ function handleCallbackError(bot, callbackQuery, error) {
 
 /**
  * Configura manejadores de errores a nivel de proceso
- */
+*/
 function setupGlobalErrorHandlers() {
   process.on('unhandledRejection', (reason, promise) => {
     logger.error('Promesa rechazada no manejada:');

@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
  * Maneja los mensajes de voz recibidos a través del bot
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 async function handleVoiceMessage(bot, msg) {
   const chatId = msg.chat.id;
   
@@ -88,7 +88,7 @@ async function handleVoiceMessage(bot, msg) {
  * Maneja los archivos de audio recibidos a través del bot
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} msg - Mensaje de Telegram
- */
+*/
 async function handleAudioFile(bot, msg) {
   const chatId = msg.chat.id;
   
@@ -169,7 +169,7 @@ async function handleAudioFile(bot, msg) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} originalMsg - Mensaje original de Telegram
  * @param {string} transcription - Texto transcrito del audio
- */
+*/
 async function processTranscribedMessage(bot, originalMsg, transcription) {
   const chatId = originalMsg.chat.id;
   

@@ -5,6 +5,7 @@ const conversationController = require('../controllers/conversationController');
 const checkoutController = require('../controllers/checkoutController');
 const stateService = require('../services/botStateService');
 const adminService = require('../services/adminService');
+const buttonService = require('../services/buttonGeneratorService');
 const errorHandlers = require('./errorHandlers');
 const logger = require('../utils/logger');
 
@@ -14,7 +15,7 @@ const STATES = stateService.STATES;
  * Procesa los callbacks de los botones que presiona el usuario
  * @param {object} bot - Instancia del bot de Telegram
  * @param {object} callbackQuery - Información del callback de Telegram
- */
+*/
 async function processCallbackQuery(bot, callbackQuery) {
   try {
     const chatId = callbackQuery.message.chat.id;
@@ -33,38 +34,89 @@ async function processCallbackQuery(bot, callbackQuery) {
     logger.log(`Callback recibido: ${data} de usuario ${chatId}`);
 
     // ===================================================
-    // PUNTO CRÍTICO: VERIFICACIÓN Y MANEJO DE ADMIN
+    // MANEJO DIRECTO DE CALLBACKS DE INVENTARIO
     // ===================================================
     
-    // 1. PRIMERO verificamos si es un callback relacionado con administración
-    if (data.startsWith('admin_')) {
-      // 2. VERIFICAR si el usuario es administrador
-      const isUserAdmin = await adminService.isAdmin(chatId.toString());
+    // PRIORIDAD MÁXIMA: Manejar callbacks de inventario PRIMERO
+    if (data.startsWith('save_inventory_') || data === 'cancel_inventory') {
+      logger.log(`🔧 PROCESANDO CALLBACK DE INVENTARIO: ${data}`);
       
-      // 3a. Si NO es admin y está intentando usar funciones de admin, bloqueamos
+      // Verificar si es administrador
+      const isUserAdmin = await adminService.isAdmin(chatId.toString());
       if (!isUserAdmin) {
-        await bot.sendMessage(
-          chatId,
-          "⛔ No tienes permisos para acceder a las funciones de administrador."
-        );
-        return; // Terminamos el procesamiento aquí
+        await bot.sendMessage(chatId, "⛔ No tienes permisos para esta operación.");
+        return;
       }
       
-      // 3b. Si ES admin, procesamos el callback de administración
-      const wasProcessed = await adminController.processAdminCallbacks(bot, callbackQuery);
+      // Procesar callback de inventario
+      try {
+        if (data.startsWith('save_inventory_')) {
+          const fileName = data.replace('save_inventory_', '');
+          logger.log(`💾 Guardando inventario del archivo: ${fileName}`);
+          
+          const fileProcessingService = require('../services/fileProcessingService');
+          await adminController.handleSaveInventory(bot, chatId, messageId, fileName, fileProcessingService);
+        }
+        else if (data === 'cancel_inventory') {
+          logger.log(`❌ Cancelando subida de inventario`);
+          await adminController.handleCancelInventory(bot, chatId, messageId);
+        }
+        
+        logger.log(`✅ Callback de inventario procesado exitosamente`);
+        return;
+      } catch (inventoryError) {
+        logger.error(`💥 Error procesando callback de inventario: ${inventoryError.message}`);
+        await bot.sendMessage(chatId, `❌ Error al procesar inventario: ${inventoryError.message}`);
+        return;
+      }
+    }
+
+    // ===================================================
+    // MANEJO DE OTROS CALLBACKS DE ADMIN
+    // ===================================================
+    
+    if (data.startsWith('admin_')) {
+      const isUserAdmin = await adminService.isAdmin(chatId.toString());
       
-      // Si el callback ya fue procesado por el controlador de admin, terminamos
+      if (!isUserAdmin) {
+        await bot.sendMessage(chatId, "⛔ No tienes permisos para acceder a las funciones de administrador.");
+        return;
+      }
+      
+      // Intentar procesar con el controlador de admin
+      const wasProcessed = await adminController.processAdminCallbacks(bot, callbackQuery);
       if (wasProcessed) {
         return;
+      }
+      
+      // Si no se procesó, manejar casos específicos
+      switch (data) {
+        case 'admin_inventory':
+          await adminController.handleInventoryManagement(bot, chatId);
+          return;
+        case 'admin_upload_inventory':
+          await adminController.handleUploadInventory(bot, chatId);
+          return;
+        case 'admin_user_management':
+          await adminController.handleUserManagement(bot, chatId);
+          return;
+        case 'admin_stats':
+          await adminController.handleStats(bot, chatId);
+          return;
+        case 'admin_back':
+          await bot.sendMessage(chatId, "Panel de Administración", buttonService.generateAdminButtons());
+          return;
+        default:
+          logger.log(`Callback admin no manejado: ${data}`);
+          await bot.sendMessage(chatId, "Función de administración no disponible.");
+          return;
       }
     }
     
     // ===================================================
-    // PROCESAMIENTO NORMAL PARA TODOS LOS USUARIOS
+    // CALLBACKS DE USUARIOS NORMALES
     // ===================================================
     
-    // A partir de aquí, procesamos callbacks disponibles para todos los usuarios
-    // Agrupar callbacks por categorías para mejor manejo
     if (data.startsWith('remove_qty_') || data === 'confirm_remove' || data === 'cancel_remove') {
       await handleRemoveCallbacks(bot, chatId, data);
     }
@@ -91,152 +143,50 @@ async function processCallbackQuery(bot, callbackQuery) {
              data === 'clear_cart' || data === 'export_cart' || data === 'reject_products') {
       await handleCartActionCallbacks(bot, chatId, data);
     }
+    else if (data.startsWith('add_qty_')) {
+      await handleAddQuantityCallbacks(bot, chatId, data);
+    }
     else {
-      logger.log(`Callback no manejado: ${data}`);
+      logger.log(`❌ Callback NO MANEJADO: ${data}`);
       bot.sendMessage(chatId, "Lo siento, no pude procesar esa acción. Por favor, intenta nuevamente.");
     }
+    
   } catch (error) {
+    logger.error(`💥 Error crítico en processCallbackQuery: ${error.message}`);
     errorHandlers.handleCallbackError(bot, callbackQuery, error);
   }
 }
 
 /**
- * Maneja callbacks relacionados con estadísticas
- * Este método solo debe llamarse después de verificar que el usuario es admin
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
-async function handleStatsCallbacks(bot, chatId, data) {
-  const statsController = require('../controllers/admin/statsController');
-  
-  if (data === 'admin_stats') {
-    await statsController.showStatsPanel(bot, chatId);
-  }
-  else if (data === 'admin_stats_summary') {
-    await statsController.showStatsSummary(bot, chatId);
-  }
-  else if (data === 'admin_stats_pending') {
-    await statsController.showPendingOrdersStats(bot, chatId);
-  }
-  else if (data === 'admin_stats_completed') {
-    await statsController.showCompletedOrdersStats(bot, chatId);
-  }
-  else if (data === 'admin_stats_canceled') {
-    await statsController.showCanceledOrdersStats(bot, chatId);
-  }
-  else if (data === 'admin_stats_inventory') {
-    await statsController.showInventoryStats(bot, chatId);
-  }
-  else if (data === 'admin_stats_users') {
-    await statsController.showUserStats(bot, chatId);
-  }
-  else if (data === 'admin_stats_export') {
-    await statsController.exportStats(bot, chatId);
-  }
-  else if (data === 'admin_stats_pending_all') {
-    // Función para ver todos los pedidos pendientes (a implementar)
-    bot.sendMessage(
-      chatId,
-      "Próximamente: Vista completa de todos los pedidos pendientes"
-    );
-  }
-  else if (data === 'admin_stats_completed_all') {
-    // Función para ver todos los pedidos completados (a implementar)
-    bot.sendMessage(
-      chatId,
-      "Próximamente: Vista completa de todos los pedidos completados"
-    );
-  }
-  else if (data === 'admin_stats_canceled_all') {
-    // Función para ver todos los pedidos cancelados (a implementar)
-    bot.sendMessage(
-      chatId,
-      "Próximamente: Vista completa de todos los pedidos cancelados"
-    );
-  }
-  else if (data === 'admin_stats_inventory_out') {
-    // Función para ver productos agotados (a implementar)
-    bot.sendMessage(
-      chatId,
-      "Próximamente: Vista completa de productos agotados"
-    );
-  }
-  else if (data === 'admin_stats_users_all') {
-    // Función para ver todos los usuarios (a implementar)
-    bot.sendMessage(
-      chatId,
-      "Próximamente: Vista completa de todos los usuarios"
-    );
-  }
-}
-
-/**
- * Maneja callbacks relacionados con la administración
- * Este método solo debe llamarse después de verificar que el usuario es admin
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
-async function handleAdminCallbacks(bot, chatId, data) {
-  // Como ya verificamos los permisos en processCallbackQuery, podemos proceder
-  if (data === 'admin_inventory') {
-    adminController.handleInventoryManagement(bot, chatId);
-  }
-  else if (data === 'admin_upload_inventory') {
-    adminController.handleUploadInventory(bot, chatId);
-  }
-  else if (data === 'admin_user_management') {
-    adminController.handleUserManagement(bot, chatId);
-  }
-  else if (data === 'admin_stats') {
-    adminController.handleStats(bot, chatId);
-  }
-  // Otros callbacks específicos de admin...
-}
-
-/**
- * Maneja callbacks relacionados con el inventario
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {number} messageId - ID del mensaje
- * @param {string} data - Datos del callback
- */
-async function handleInventoryCallbacks(bot, chatId, messageId, data) {
-  // Verificar nuevamente si es administrador por seguridad
-  if (!await adminService.isAdmin(chatId.toString())) {
-    return bot.sendMessage(chatId, "No tienes permisos para acceder a esta función.");
-  }
-  
-  if (data.startsWith('save_inventory_')) {
-    const fileName = data.replace('save_inventory_', '');
-    const fileProcessingService = require('../services/fileProcessingService');
-    
-    adminController.handleSaveInventory(bot, chatId, messageId, fileName, fileProcessingService);
-  }
-  else if (data === 'cancel_inventory') {
-    adminController.handleCancelInventory(bot, chatId, messageId);
+ * Maneja callbacks relacionados con añadir cantidad
+*/
+async function handleAddQuantityCallbacks(bot, chatId, data) {
+  try {
+    if (data === 'add_qty_custom') {
+      stateService.setState(chatId, STATES.ASKING_ADD_QUANTITY);
+      await bot.sendMessage(chatId, "Por favor, indica cuántas unidades adicionales quieres añadir:");
+    } else {
+      const quantity = data.replace('add_qty_', '');
+      await cartController.handleAddQuantity(bot, chatId, parseInt(quantity));
+    }
+  } catch (error) {
+    logger.error(`Error al manejar callback de añadir cantidad: ${error.message}`);
+    await bot.sendMessage(chatId, "Error al procesar la cantidad. Por favor, intenta de nuevo.");
   }
 }
 
 /**
  * Maneja callbacks relacionados con la eliminación de productos
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleRemoveCallbacks(bot, chatId, data) {
   if (data.startsWith('remove_qty_')) {
-    // Procesar cantidad a eliminar desde botón
     const quantity = data.replace('remove_qty_', '');
     cartController.handleRemoveQuantity(bot, chatId, quantity);
   }
   else if (data === 'confirm_remove') {
-    // Confirmar eliminación de producto
     await cartController.handleConfirmRemove(bot, chatId);
   }
   else if (data === 'cancel_remove') {
-    // Cancelar eliminación
     stateService.setState(chatId, STATES.INITIAL);
     bot.sendMessage(chatId, "Operación cancelada. No se ha eliminado nada de tu carrito.");
   }
@@ -244,19 +194,14 @@ async function handleRemoveCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con el vaciado del carrito
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleClearCartCallbacks(bot, chatId, data) {
   if (data === 'confirm_clear_cart') {
-    // Confirmar vaciado del carrito
     await cartController.handleClearCartCommand(bot, chatId);
     stateService.setState(chatId, STATES.INITIAL);
     bot.sendMessage(chatId, "✅ Tu carrito ha sido vaciado completamente.");
   }
   else if (data === 'cancel_clear_cart') {
-    // Cancelar vaciado del carrito
     stateService.setState(chatId, STATES.INITIAL);
     bot.sendMessage(chatId, "Operación cancelada. Tu carrito no ha sido modificado.");
   }
@@ -264,172 +209,109 @@ async function handleClearCartCallbacks(bot, chatId, data) {
 
 /**
  * Maneja callbacks relacionados con el proceso de checkout
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleCheckoutCallbacks(bot, chatId, data) {
   if (data === 'checkout') {
-    // Iniciar proceso de tramitación de pedido
     checkoutController.handleCheckout(bot, chatId);
   }
   else if (data === 'confirm_checkout') {
-    // Confirmar pedido
     checkoutController.handleConfirmCheckout(bot, chatId);
   }
   else if (data === 'cancel_checkout') {
-    // Cancelar tramitación
     checkoutController.handleCancelCheckout(bot, chatId);
   }
   else if (data === 'new_purchase') {
-    // Iniciar nueva compra
     checkoutController.handleNewPurchase(bot, chatId);
   }
   else if (data === 'view_orders') {
-    // Ver pedidos
     checkoutController.handleViewOrders(bot, chatId);
   }
 }
 
 /**
  * Maneja callbacks relacionados con la navegación
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleNavigationCallbacks(bot, chatId, data) {
   if (data === 'start_remove_item') {
-    // Iniciar proceso de eliminación de producto individual
-    bot.sendMessage(
-      chatId,
-      "¿Qué producto deseas eliminar? Indica su número (1, 2, 3...) o escribe su nombre."
-    );
+    bot.sendMessage(chatId, "¿Qué producto deseas eliminar? Indica su número (1, 2, 3...) o escribe su nombre.");
     stateService.setState(chatId, STATES.REMOVING_ITEM);
   }
   else if (data === 'search_products') {
-    // Iniciar búsqueda de productos
-    bot.sendMessage(
-      chatId,
-      "¿Qué tipo de producto estás buscando? Descríbelo y te mostraré las opciones disponibles."
-    );
+    bot.sendMessage(chatId, "¿Qué tipo de producto estás buscando? Descríbelo y te mostraré las opciones disponibles.");
     stateService.setState(chatId, STATES.INITIAL);
   }
   else if (data === 'go_home') {
-    // Volver al inicio
-    bot.sendMessage(
-      chatId,
-      "¡Bienvenido nuevamente! ¿En qué puedo ayudarte hoy? Puedo mostrarte nuestros productos o responder a tus consultas."
-    );
+    bot.sendMessage(chatId, "¡Bienvenido nuevamente! ¿En qué puedo ayudarte hoy?");
     stateService.setState(chatId, STATES.INITIAL);
   }
 }
 
 /**
  * Maneja callbacks relacionados con la selección de productos
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleSelectCallbacks(bot, chatId, data) {
-  // Selección de producto
   const productIndex = parseInt(data.split('_')[1]);
   productController.handleProductSelection(bot, chatId, productIndex);
 }
 
 /**
  * Maneja callbacks relacionados con la cantidad
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleQuantityCallbacks(bot, chatId, data) {
-  // Selección de cantidad
   if (data.startsWith('qty_custom_')) {
-    // Cantidad personalizada
     const productIndex = parseInt(data.split('_')[2]);
-    
-    // Actualizar estado
     stateService.setState(chatId, STATES.ASKING_QUANTITY);
     stateService.setContextValue(chatId, 'selectedArticleIndex', productIndex);
-    
-    // Solicitar cantidad
-    bot.sendMessage(
-      chatId,
-      "Por favor, introduce la cantidad deseada (solo el número):"
-    );
+    bot.sendMessage(chatId, "Por favor, introduce la cantidad deseada (solo el número):");
   } else {
-    // Cantidad específica
     const parts = data.split('_');
     const productIndex = parseInt(parts[1]);
     const quantity = parseInt(parts[2]);
-    
     productController.handleQuantitySelection(bot, chatId, productIndex, quantity);
   }
 }
 
 /**
  * Maneja callbacks relacionados con la confirmación de añadir al carrito
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleConfirmAddCallbacks(bot, chatId, data) {
   if (data === 'confirm_add') {
-    // Confirmar añadir al carrito
     conversationController.handleFinalConfirmation(bot, chatId, true);
   }
   else if (data === 'cancel_add') {
-    // Cancelar añadir al carrito
     conversationController.handleFinalConfirmation(bot, chatId, false);
   }
 }
 
 /**
  * Maneja callbacks relacionados con acciones del carrito
- * @param {object} bot - Instancia del bot de Telegram
- * @param {number} chatId - ID del chat
- * @param {string} data - Datos del callback
- */
+*/
 async function handleCartActionCallbacks(bot, chatId, data) {
   if (data === 'continue_shopping') {
-    // Continuar comprando
     stateService.setState(chatId, STATES.INITIAL);
-    bot.sendMessage(
-      chatId,
-      "¡Perfecto! ¿Qué más estás buscando?"
-    );
+    bot.sendMessage(chatId, "¡Perfecto! ¿Qué más estás buscando?");
   }
   else if (data === 'view_cart') {
-    // Ver carrito
     cartController.handleCartCommand(bot, chatId);
   }
   else if (data === 'end_shopping') {
-    // Finalizar compra
     conversationController.handleEndConversation(bot, chatId);
   }
   else if (data === 'clear_cart') {
-    // Vaciar carrito
     cartController.handleStartClearCart(bot, chatId);
   }
   else if (data === 'export_cart') {
-    // Exportar carrito
     cartController.handleExportCartCommand(bot, chatId);
   }
   else if (data === 'reject_products') {
-    // Rechazar productos mostrados
-    bot.sendMessage(
-      chatId,
-      "Entendido. ¿Qué tipo de producto estás buscando? Puedo ayudarte a encontrar algo más adecuado."
-    );
+    bot.sendMessage(chatId, "Entendido. ¿Qué tipo de producto estás buscando?");
     stateService.setState(chatId, STATES.INITIAL);
   }
 }
 
 module.exports = {
   processCallbackQuery,
-  handleAdminCallbacks,
-  handleStatsCallbacks,
-  handleInventoryCallbacks,
+  handleAddQuantityCallbacks,
   handleRemoveCallbacks,
   handleClearCartCallbacks,
   handleCheckoutCallbacks,

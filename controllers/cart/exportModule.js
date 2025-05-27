@@ -1,16 +1,16 @@
 // Maneja las funciones relacionadas con exportar el carrito
-
 const fs = require('fs');
 const path = require('path');
 const carritoService = require('../../services/carritoService');
 const logger = require('../../utils/logger');
+
 
 /**
  * Maneja el comando para exportar el carrito
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleExportCartCommand(bot, chatId) {
   try {
     const jsonData = carritoService.exportCartToJSON(chatId.toString());
@@ -45,6 +45,7 @@ async function handleExportCartCommand(bot, chatId) {
     // Eliminar el archivo temporal después de enviarlo
     setTimeout(() => {
       try {
+
         if (fs.existsSync(tempFilePath)) {
           fs.unlinkSync(tempFilePath);
           logger.log(`Usuario ${chatId}: Archivo temporal de carrito eliminado`);
@@ -60,13 +61,14 @@ async function handleExportCartCommand(bot, chatId) {
     bot.sendMessage(chatId, "Hubo un error al exportar tu carrito. Inténtalo de nuevo.");
     return false;
   }
+  
 }
 
 /**
  * Exporta el carrito en formato CSV
  * @param {number} chatId - ID del chat
  * @returns {Promise<string>} - Ruta al archivo CSV generado
- */
+*/
 async function exportCartToCSV(chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -82,6 +84,7 @@ async function exportCartToCSV(chatId) {
       const precio = parseFloat(item.precio) || 0;
       const cantidad = parseInt(item.cantidad) || 0;
       const subtotal = precio * cantidad;
+      
       
       // Escapar comas en la descripción
       const descripcionEscapada = item.DescripcionArticulo.includes(',') 
@@ -124,7 +127,7 @@ async function exportCartToCSV(chatId) {
  * Genera un resumen en texto del carrito
  * @param {number} chatId - ID del chat
  * @returns {string} - Texto con el resumen del carrito
- */
+*/
 function generateCartSummary(chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());

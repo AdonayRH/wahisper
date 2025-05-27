@@ -1,5 +1,4 @@
 // Maneja las funciones relacionadas con eliminar productos del carrito
-
 const carritoService = require('../../services/carritoService');
 const stateService = require('../../services/botStateService');
 const displayModule = require('./displayModule');
@@ -13,7 +12,7 @@ const STATES = stateService.STATES;
  * @param {number} chatId - ID del chat
  * @param {number} index - Índice del artículo a eliminar
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleRemoveFromCartCommand(bot, chatId, index) {
   try {
     const result = carritoService.removeFromCart(chatId.toString(), index);
@@ -42,7 +41,7 @@ async function handleRemoveFromCartCommand(bot, chatId, index) {
  * @param {number} chatId - ID del chat
  * @param {number|string} productIdentifier - Índice o identificador del producto
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleStartRemoveItem(bot, chatId, productIdentifier) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -135,7 +134,7 @@ async function handleStartRemoveItem(bot, chatId, productIdentifier) {
  * @param {number} chatId - ID del chat
  * @param {number|string} quantity - Cantidad a eliminar
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleRemoveQuantity(bot, chatId, quantity) {
   try {
     const context = stateService.getContext(chatId);
@@ -195,7 +194,7 @@ async function handleRemoveQuantity(bot, chatId, quantity) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleConfirmRemove(bot, chatId) {
   try {
     const context = stateService.getContext(chatId);
@@ -249,7 +248,7 @@ async function handleConfirmRemove(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleStartClearCart(bot, chatId) {
   try {
     const carrito = carritoService.getCart(chatId.toString());
@@ -288,7 +287,7 @@ async function handleStartClearCart(bot, chatId) {
  * @param {object} bot - Instancia del bot de Telegram
  * @param {number} chatId - ID del chat
  * @returns {Promise} - Promesa de la operación
- */
+*/
 async function handleClearCartCommand(bot, chatId) {
   try {
     const result = carritoService.clearCart(chatId.toString());

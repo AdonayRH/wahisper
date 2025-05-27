@@ -6,7 +6,7 @@
  * @param {object} options - Opciones adicionales
  * @param {number} maxRetries - Número máximo de reintentos
  * @returns {Promise<object>} - Respuesta del envío
- */
+*/
 async function sendMessageWithRetry(bot, chatId, text, options = {}, maxRetries = 3) {
   let lastError;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -33,7 +33,7 @@ async function sendMessageWithRetry(bot, chatId, text, options = {}, maxRetries 
  * @param {object} options - Opciones para editar
  * @param {number} maxRetries - Número máximo de reintentos
  * @returns {Promise<object>} - Respuesta de la edición
- */
+*/
 async function editMessageWithRetry(bot, text, options, maxRetries = 3) {
   let lastError;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -61,7 +61,7 @@ async function editMessageWithRetry(bot, text, options, maxRetries = 3) {
  * @param {object} options - Opciones adicionales
  * @param {number} maxRetries - Número máximo de reintentos
  * @returns {Promise<object>} - Respuesta del envío
- */
+*/
 async function sendDocumentWithRetry(bot, chatId, filePath, options = {}, maxRetries = 3) {
   let lastError;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
