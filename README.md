@@ -1,10 +1,10 @@
-Este proyecto busca poder crear una tienda online, donde se puedan manejar las peticiones del usuario mediante IA, usando NLU y embeddings.
+Este proyecto busca poder crear una tienda online, donde se puedan manejar las peticiones del usuario mediante IA, usando NLU, NPL y embeddings.
 
 Manual técnico:
-[Whaisper Documentación .pdf](https://github.com/user-attachments/files/20457231/Whaisper.Documentacion.pdf)
+[Whaisper_Manual_Técnico.pdf](https://github.com/user-attachments/files/20490443/Whaisper_Manual_Tecnico.pdf)
 
 Manual de usuario:
-[MANUAL DE USUARIO.pdf](https://github.com/user-attachments/files/20457230/MANUAL.DE.USUARIO.pdf)
+[Whaisper_Manual_Usuario.pdf](https://github.com/user-attachments/files/20490441/Whaisper_Manual_Usuario.pdf)
 
 Memoria del proyecto:
-[Memoria Whaisper.pdf](https://github.com/user-attachments/files/20457229/Memoria.Whaisper.pdf)
+[Whaisper_Memoria_Proyecto.pdf](https://github.com/user-attachments/files/20490442/Whaisper_Memoria_Proyecto.pdf)
